@@ -1,0 +1,8 @@
+version: 2
+default_workflow: critical
+artifact_root: specs
+operating_mode: individual
+agent_platform:
+  enabled: true
+  default_execution_mode: advisory
+  max_context_chars_per_file: 30000
