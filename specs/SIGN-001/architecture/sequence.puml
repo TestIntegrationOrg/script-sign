@@ -1,0 +1,21 @@
+@startuml
+actor Caller
+participant "ScriptSigningController" as API
+participant "DigiCertScriptSigningService" as Service
+participant "Jsign" as Jsign
+participant "DigiCert ONE / KeyLocker" as DigiCert
+participant "RFC3161 TSA" as TSA
+
+Caller -> API: POST /api/v1/scripts/sign
+API -> Service: sign(fileName, scriptContent)
+Service -> Service: validate + create temp .ps1
+Service -> Jsign: sign(Signable)
+Jsign -> DigiCert: remote private-key signature
+DigiCert --> Jsign: signature value
+Jsign -> TSA: timestamp request
+TSA --> Jsign: timestamp token
+Jsign --> Service: signed file
+Service -> Service: read signed content + delete temp file
+Service --> API: signed response
+API --> Caller: 200 signed script
+@enduml

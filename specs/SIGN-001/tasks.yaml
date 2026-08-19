@@ -1,0 +1,39 @@
+version: 1
+feature: SIGN-001
+tasks:
+  - id: T-001
+    title: Bootstrap Java signing service
+    traces_to: [REQ-001, NFR-002]
+    status: completed
+  - id: T-002
+    title: Implement versioned script signing API and validation
+    traces_to: [REQ-001, REQ-005, REQ-007, AC-001, AC-004]
+    status: completed
+  - id: T-003
+    title: Integrate Jsign with DigiCert ONE / KeyLocker
+    traces_to: [REQ-002, REQ-003, AC-002, AC-005]
+    status: completed
+  - id: T-004
+    title: Configure RFC 3161 timestamping
+    traces_to: [REQ-004]
+    status: completed
+  - id: T-005
+    title: Protect temporary files and externalize secrets
+    traces_to: [REQ-006, REQ-008, NFR-001]
+    status: completed
+  - id: T-006
+    title: Add API tests and error handling tests
+    traces_to: [AC-001, AC-004]
+    status: completed
+  - id: T-007
+    title: Verify build and automated tests
+    traces_to: [NFR-004]
+    status: pending
+  - id: T-008
+    title: Run live DigiCert and Windows trust validation
+    traces_to: [AC-002, AC-003, AC-005]
+    status: pending
+  - id: T-009
+    title: Add production caller authentication authorization and audit controls
+    traces_to: [NFR-001]
+    status: pending

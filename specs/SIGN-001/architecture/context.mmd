@@ -1,0 +1,5 @@
+flowchart LR
+    Caller[Authorized Calling Service] -->|POST /api/v1/scripts/sign| API[Java Script Signing Service]
+    API -->|Remote signature request| DigiCert[DigiCert ONE / KeyLocker]
+    API -->|RFC 3161 timestamp request| TSA[DigiCert Timestamp Authority]
+    API -->|Signed PowerShell content| Caller

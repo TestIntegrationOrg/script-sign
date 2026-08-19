@@ -1,0 +1,8 @@
+flowchart LR
+    Caller[Caller] --> Controller[ScriptSigningController]
+    Controller --> Service[ScriptSigningService]
+    Service --> Temp[(Ephemeral .ps1)]
+    Service --> Jsign[Jsign AuthenticodeSigner]
+    Jsign --> KeyLocker[DigiCert ONE / KeyLocker]
+    Jsign --> TSA[RFC 3161 TSA]
+    Service --> Controller
