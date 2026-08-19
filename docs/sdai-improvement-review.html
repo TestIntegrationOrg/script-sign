@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SD-AI Improvement Review — SIGN-001</title>
+  <style>
+    :root {
+      --bg: #f6f8fa;
+      --surface: #ffffff;
+      --text: #1f2328;
+      --muted: #656d76;
+      --border: #d0d7de;
+      --accent: #0969da;
+      --accent-soft: #ddf4ff;
+      --good: #1a7f37;
+      --good-soft: #dafbe1;
+      --warn: #9a6700;
+      --warn-soft: #fff8c5;
+      --bad: #cf222e;
+      --bad-soft: #ffebe9;
+      --critical: #8250df;
+      --critical-soft: #fbefff;
+      --code: #f6f8fa;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+    header {
+      background: linear-gradient(135deg, #0d1117, #24292f);
+      color: white;
+      border-radius: 14px;
+      padding: 36px;
+      margin-bottom: 24px;
+    }
+    header h1 { margin: 0 0 8px; font-size: 32px; line-height: 1.2; }
+    header p { margin: 6px 0; color: #c9d1d9; }
+    .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    .pill {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-weight: 600;
+      font-size: 12px;
+      border: 1px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.08);
+    }
+    nav, section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 18px 0;
+    }
+    nav ul { columns: 2; margin: 8px 0 0; padding-left: 22px; }
+    h2 { margin-top: 0; font-size: 24px; }
+    h3 { margin-top: 28px; font-size: 19px; }
+    h4 { margin: 18px 0 8px; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    code { background: var(--code); border-radius: 5px; padding: 2px 5px; }
+    pre {
+      overflow-x: auto;
+      padding: 16px;
+      background: #0d1117;
+      color: #e6edf3;
+      border-radius: 8px;
+    }
+    table { width: 100%; border-collapse: collapse; margin: 14px 0 22px; }
+    th, td { border: 1px solid var(--border); padding: 10px 12px; vertical-align: top; text-align: left; }
+    th { background: #f6f8fa; }
+    .callout {
+      border-left: 4px solid var(--accent);
+      background: var(--accent-soft);
+      padding: 14px 16px;
+      border-radius: 6px;
+      margin: 14px 0;
+    }
+    .callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+    .callout.bad { border-color: var(--bad); background: var(--bad-soft); }
+    .callout.good { border-color: var(--good); background: var(--good-soft); }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .p0 { color: #fff; background: var(--bad); }
+    .p1 { color: #5f4200; background: #f7d154; }
+    .p2 { color: #0a3069; background: #b6e3ff; }
+    .framework { color: #4c2889; background: var(--critical-soft); }
+    .emulation { color: #0a3069; background: var(--accent-soft); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+    .card { border: 1px solid var(--border); border-radius: 10px; padding: 16px; background: #fff; }
+    .card h3, .card h4 { margin-top: 0; }
+    .score { font-size: 28px; font-weight: 700; }
+    details { border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin: 12px 0; }
+    details[open] { padding-bottom: 16px; }
+    summary { cursor: pointer; font-weight: 700; }
+    .small { color: var(--muted); font-size: 13px; }
+    .mono-tree { white-space: pre; overflow-x: auto; background: #f6f8fa; border: 1px solid var(--border); padding: 14px; border-radius: 8px; }
+    footer { color: var(--muted); text-align: center; margin-top: 30px; font-size: 13px; }
+    @media (max-width: 700px) {
+      nav ul { columns: 1; }
+      main { padding: 16px 12px 50px; }
+      header { padding: 24px; }
+      th, td { padding: 8px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>SD-AI Improvement Review</h1>
+    <p>Case study: <strong>TestIntegrationOrg/script-sign</strong> — feature <strong>SIGN-001</strong></p>
+    <p>Purpose: explain why SD-AI produces or requires a large number of specification, architecture, review, and evidence artifacts, and identify framework improvements without changing the framework in this work item.</p>
+    <div class="meta">
+      <span class="pill">Analysis only — no fixes applied</span>
+      <span class="pill">Branch: agent/script-signing-service</span>
+      <span class="pill">Review date: 2026-08-18</span>
+      <span class="pill">Focus: lifecycle + artifact model + validation</span>
+    </div>
+  </header>
+
+  <nav>
+    <strong>Contents</strong>
+    <ul>
+      <li><a href="#executive-summary">Executive summary</a></li>
+      <li><a href="#method">Method and important caveat</a></li>
+      <li><a href="#observed">Observed artifact structure</a></li>
+      <li><a href="#workflow">How SD-AI currently behaves</a></li>
+      <li><a href="#findings">Detailed findings</a></li>
+      <li><a href="#non-defects">What is not an SD-AI defect</a></li>
+      <li><a href="#root-causes">Root-cause model</a></li>
+      <li><a href="#target-model">Recommended target model</a></li>
+      <li><a href="#priorities">Improvement priorities</a></li>
+      <li><a href="#acceptance-tests">Acceptance tests for SD-AI improvements</a></li>
+      <li><a href="#case-study">SIGN-001 ideal artifact profile</a></li>
+      <li><a href="#roadmap">Suggested implementation roadmap</a></li>
+    </ul>
+  </nav>
+
+  <section id="executive-summary">
+    <h2>1. Executive summary</h2>
+    <div class="grid">
+      <div class="card"><div class="score">P0</div><h4>Generator/validator mismatch</h4><p>SD-AI can generate an architecture baseline that does not structurally satisfy its own critical architecture validation contract.</p></div>
+      <div class="card"><div class="score">P0</div><h4>Criticality conflates assurance with documentation breadth</h4><p>A security-critical but architecturally small service can be forced into the maximum artifact catalog.</p></div>
+      <div class="card"><div class="score">P1</div><h4>Canonical artifact ownership is unclear</h4><p>Deterministic baselines and semantic reviews overlap, making it unclear which artifact is the actual source of truth.</p></div>
+      <div class="card"><div class="score">P1</div><h4>Evidence is fragmented</h4><p>Review output, plugin evidence, validation state, approvals, and worktree evidence live in different locations and formats.</p></div>
+    </div>
+
+    <div class="callout bad">
+      <strong>Most important finding:</strong> the deterministic architecture generator and critical architecture validator are not aligned. The generator writes a smaller and differently named artifact set than the validator expects. This is a real SD-AI framework issue, not a result of the GitHub-only emulation used for this feature.
+    </div>
+
+    <p>The core improvement should be to move SD-AI from a <strong>required-files model</strong> to an <strong>engineering-evidence model</strong>. The framework should determine what evidence is required from feature characteristics, then allow the minimum sufficient set of canonical artifacts to satisfy that evidence.</p>
+  </section>
+
+  <section id="method">
+    <h2>2. Method and important caveat</h2>
+    <p>This review was produced by inspecting the SD-AI framework source and the resulting <code>script-sign</code> feature branch. The original implementation session did <strong>not</strong> execute <code>sdai run</code> end-to-end in a local workspace. The runtime lacked a local SD-AI execution environment, so the lifecycle was approximated through the GitHub connector while following SD-AI conventions.</p>
+
+    <div class="callout warn">
+      <strong>Evaluation rule:</strong> duplicate numbered artifacts created by that approximation must not be counted as proof that SD-AI itself duplicates artifacts. Framework findings below are limited to behavior supported by the actual SD-AI source/configuration.
+    </div>
+
+    <h3>Primary framework areas reviewed</h3>
+    <ul>
+      <li><code>src/sdai/agents/lifecycle.py</code> — deterministic requirement, architecture, planning, implementation-brief, and security artifact generation.</li>
+      <li><code>src/sdai/workflow_templates.py</code> — agentic and enterprise workflow sequencing and review outputs.</li>
+      <li><code>.sdai/architecture-validation.yaml</code> and architecture validation code — required artifact classes by lifecycle mode.</li>
+      <li><code>.sdai/agents/architect.agent.md</code> — semantic architect responsibilities and capabilities.</li>
+      <li><code>.sdai/agents/requirements-analyst.agent.md</code> — semantic requirements-analysis responsibilities.</li>
+      <li>Workflow orchestrator persistence behavior for AI review outputs and plugin evidence.</li>
+    </ul>
+  </section>
+
+  <section id="observed">
+    <h2>3. Observed artifact structure in SIGN-001</h2>
+    <p>The current feature branch contains both early hand-authored/emulated artifacts and later canonical SD-AI-style artifacts.</p>
+
+    <div class="mono-tree">specs/SIGN-001/
+├── 00-intake.md
+├── 01-specification.md          ← earlier emulation artifact
+├── 02-architecture.md           ← earlier emulation artifact
+├── 03-security.md               ← earlier emulation artifact
+├── specification.md             ← canonical SD-AI-style specification
+├── architecture/
+│   ├── architecture.md
+│   ├── decision-matrix.md
+│   ├── context.mmd
+│   ├── container.mmd
+│   └── sequence.puml
+├── adr/
+│   └── ADR-001-initial-architecture.md
+├── security-review.md
+├── plan.md
+├── tasks.yaml
+├── implementation-brief.md
+└── evidence/
+    ├── commit-intent.md
+    ├── requirements-review.md
+    ├── architecture-review.md
+    ├── security-evidence.md
+    ├── implementation-evidence.md
+    ├── test-evidence.md
+    ├── traceability.md
+    └── summary.md</div>
+
+    <h3>Classification</h3>
+    <table>
+      <thead><tr><th>Artifact group</th><th>Classification</th><th>Interpretation</th></tr></thead>
+      <tbody>
+        <tr><td><code>01-specification.md</code>, <code>02-architecture.md</code>, <code>03-security.md</code></td><td><span class="badge emulation">Emulation-created</span></td><td>These duplicates came from the GitHub-based implementation approach, not from normal SD-AI deterministic generation.</td></tr>
+        <tr><td><code>specification.md</code>, architecture baseline, ADR, plan, tasks, implementation brief</td><td><span class="badge framework">Framework-aligned</span></td><td>These correspond directly to SD-AI lifecycle concepts.</td></tr>
+        <tr><td><code>evidence/*</code></td><td><span class="badge emulation">Repository evidence added manually</span></td><td>Added because the user requested all evidence to be committed and normal SD-AI evidence is not represented by one repository-visible evidence package.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="workflow">
+    <h2>4. How SD-AI currently behaves</h2>
+    <p>The enterprise workflow combines deterministic baselines, semantic AI reviews, human approvals, workspace-writing implementation, post-implementation reviews, quality gates, and validation.</p>
+
+    <pre>Intake
+  ↓
+Deterministic specification baseline
+  ↓
+AI requirements review (advisory)
+  ↓
+Deterministic architecture baseline
+  ↓
+Parallel AI architecture + security reviews (advisory)
+  ↓
+Architecture approval + security approval
+  ↓
+Deterministic plan/tasks
+  ↓
+Workspace-writing implementation agent
+  ↓
+Parallel code review + test review
+  ↓
+Tests / optional Trivy / optional Sonar
+  ↓
+Validation</pre>
+
+    <p>This is a sound governance concept: <strong>baseline, review, approval, implementation, evidence, validation</strong> are intentionally different lifecycle states. The usability problem is that these states are frequently represented as separate files without a sufficiently strong concept of canonical ownership and evidence consolidation.</p>
+  </section>
+
+  <section id="findings">
+    <h2>5. Detailed findings</h2>
+
+    <details open>
+      <summary><span class="badge p0">P0</span> Finding 1 — Critical lifecycle equates high assurance with maximum artifact breadth</summary>
+      <p>The critical architecture profile requires a broad catalog: specification, RFC, architecture alternatives, decision matrix, ADR, C4 context, component diagram, sequence diagram, security/threat model, API/event contract, and traceability.</p>
+      <h4>Why this is a problem</h4>
+      <ul>
+        <li>Security criticality and architectural complexity are not the same thing.</li>
+        <li>A small service can require strict security controls while needing only a few architectural decisions.</li>
+        <li>Mandatory artifact breadth creates document volume even when multiple evidence needs could be satisfied by a single well-structured document.</li>
+        <li>Developers can begin optimizing for validator satisfaction rather than decision quality.</li>
+      </ul>
+      <h4>Underlying model issue</h4>
+      <pre>Current:
+criticality → required document catalog
+
+Recommended:
+feature characteristics → required engineering evidence → minimum sufficient artifacts</pre>
+    </details>
+
+    <details open>
+      <summary><span class="badge p0">P0</span> Finding 2 — Deterministic architecture generation and validation are not contract-compatible</summary>
+      <p>The deterministic architecture lifecycle creates:</p>
+      <pre>architecture/architecture.md
+architecture/decision-matrix.md
+architecture/context.mmd
+architecture/container.mmd
+adr/ADR-001-initial-architecture.md</pre>
+      <p>The critical validator expects artifact forms such as:</p>
+      <pre>rfc/RFC-*.md
+architecture/diagrams/context.*
+architecture/diagrams/component*.*
+architecture/diagrams/*sequence*.*
+security/threat-model.md
+contracts/openapi*.* (or another contract type)
+tasks.yaml + specification.md traceability</pre>
+      <h4>Concrete mismatch examples</h4>
+      <table>
+        <thead><tr><th>Concern</th><th>Generator</th><th>Validator</th><th>Impact</th></tr></thead>
+        <tbody>
+          <tr><td>Context diagram</td><td><code>architecture/context.mmd</code></td><td><code>architecture/diagrams/context.mmd</code> or equivalent</td><td>Generated artifact may not satisfy validator by path.</td></tr>
+          <tr><td>Component view</td><td><code>architecture/container.mmd</code></td><td><code>architecture/diagrams/component*.*</code></td><td>Different architectural view and naming.</td></tr>
+          <tr><td>RFC</td><td>Not generated</td><td>Required for critical</td><td>Critical workflow remains incomplete.</td></tr>
+          <tr><td>Sequence diagram</td><td>Not generated by deterministic architect</td><td>Required for critical</td><td>Additional manual/agent materialization required.</td></tr>
+          <tr><td>Threat model</td><td>Separate generic <code>security-review.md</code></td><td><code>security/threat-model.md</code></td><td>Review checklist and required security model are different artifacts.</td></tr>
+          <tr><td>API contract</td><td>Not generated</td><td>Required for critical</td><td>REST/event contracts must be produced elsewhere.</td></tr>
+        </tbody>
+      </table>
+      <div class="callout bad"><strong>Expected invariant:</strong> artifacts produced by a deterministic lifecycle step should satisfy the structural requirements that step claims to establish, or the step should explicitly report which required evidence remains incomplete.</div>
+    </details>
+
+    <details open>
+      <summary><span class="badge p1">P1</span> Finding 3 — Semantic architect has the right capabilities but is advisory</summary>
+      <p>The semantic architect is designed to work with RFCs, ADRs, C4 diagrams, sequence diagrams, API contracts, threat models, and traceability. This is almost exactly the set demanded by critical validation.</p>
+      <p>However, the architect runs in advisory mode. Its output is persisted as a review artifact rather than as the canonical architecture artifact set.</p>
+      <h4>Resulting contradiction</h4>
+      <pre>Validator requires rich canonical architecture artifacts
+                  ↓
+Semantic architect knows how to produce them
+                  ↓
+Architect is advisory only
+                  ↓
+Review content exists, but canonical files may still be missing</pre>
+      <p>This creates an avoidable materialization step and encourages duplication between “architecture” and “architecture review.”</p>
+    </details>
+
+    <details open>
+      <summary><span class="badge p1">P1</span> Finding 4 — Requirements baseline and requirements review overlap</summary>
+      <p>The deterministic requirement agent creates generic FR/NFR/AC content intended to establish traceability. The semantic requirements analyst then performs the domain-specific work needed to create implementation-useful, testable, traceable requirements.</p>
+      <p>This can make the review artifact more useful than the canonical specification.</p>
+      <h4>Risk</h4>
+      <pre>specification.md       → canonical, but generic
+ai/requirements-review → detailed, but advisory
+
+Question for engineer: which one should implementation trust?</pre>
+      <p>A better pattern is for deterministic logic to establish structure/schema and for semantic analysis to propose changes to the canonical specification, with explicit promotion/approval.</p>
+    </details>
+
+    <details open>
+      <summary><span class="badge p1">P1</span> Finding 5 — Architecture baseline and architecture review overlap</summary>
+      <p>The deterministic architecture baseline always proposes generic choices such as modular component, independently deployable service, and event-driven capability, plus a sample decision matrix. The semantic architect then performs another, richer architecture analysis.</p>
+      <p>This is useful as a safety mechanism but inefficient as a document model. The framework should preserve independent review without requiring two competing narrative sources.</p>
+    </details>
+
+    <details open>
+      <summary><span class="badge p1">P1</span> Finding 6 — Validation is artifact-oriented more than evidence-oriented</summary>
+      <p>The validator mostly asks whether specific artifact classes exist and meet basic structural checks. That is deterministic and safe, but it can over-reward document count.</p>
+      <h4>Current tendency</h4>
+      <pre>completeness ≈ required artifact types present</pre>
+      <h4>Desired tendency</h4>
+      <pre>completeness ≈ required decisions + risks + contracts + traceability + approvals covered</pre>
+      <p>A single architecture document might legitimately contain context, components, alternatives, trade-offs, trust boundaries, and sequence behavior. SD-AI should be able to validate logical sections/evidence claims, not only independent files.</p>
+    </details>
+
+    <details open>
+      <summary><span class="badge p1">P1</span> Finding 7 — Evidence is fragmented across storage models</summary>
+      <p>AI step output, plugin execution evidence, workflow state/approvals, and worktree execution evidence are not exposed through one canonical feature evidence index.</p>
+      <ul>
+        <li>AI review output is saved under paths like <code>ai/requirements-review.md</code> and <code>ai/code-review.md</code>.</li>
+        <li>Plugin evidence uses <code>plugin/&lt;step&gt;.json</code>.</li>
+        <li>Worktree evidence is stored outside ordinary tracked source under Git metadata.</li>
+        <li>Approvals and validation status use workflow-specific state.</li>
+      </ul>
+      <p>This makes the user question “show me all evidence for this feature” harder than it should be.</p>
+      <h4>Recommended capability</h4>
+      <p>Generate a machine-readable and human-readable evidence manifest that indexes all evidence without duplicating the underlying content.</p>
+    </details>
+
+    <details>
+      <summary><span class="badge p2">P2</span> Finding 8 — Lifecycle terminology mixes assurance and execution strategy</summary>
+      <p>SD-AI exposes concepts such as <code>light</code>, <code>standard</code>, <code>critical</code>, <code>agentic</code>, and <code>enterprise</code>. These are not all the same dimension.</p>
+      <h4>Recommended conceptual split</h4>
+      <pre>Assurance level:
+  light | standard | critical
+
+Execution profile:
+  individual | agentic | enterprise
+
+Examples:
+  standard + individual
+  critical + agentic
+  critical + enterprise</pre>
+      <p>This would make governance choices more understandable and reduce accidental activation of heavyweight artifact profiles.</p>
+    </details>
+
+    <details>
+      <summary><span class="badge p2">P2</span> Finding 9 — Generic deterministic prose creates boilerplate noise</summary>
+      <p>Deterministic generators create safe but broad statements that are intentionally not domain-specific. When semantic agents later generate richer analysis, the generic prose remains in the repository.</p>
+      <p>Consider making deterministic outputs schema-first or placeholder-light, then promoting reviewed semantic content into canonical artifacts.</p>
+    </details>
+
+    <details>
+      <summary><span class="badge p2">P2</span> Finding 10 — No strong duplicate/canonical-source detection</summary>
+      <p>SD-AI should warn if competing artifacts exist for the same logical role, for example both <code>01-specification.md</code> and <code>specification.md</code>, or multiple architecture narratives with no explicit relationship.</p>
+      <p>This would have caught the duplication introduced during the GitHub-only emulation and prevented users from confusing it with framework output.</p>
+    </details>
+  </section>
+
+  <section id="non-defects">
+    <h2>6. What is not an SD-AI defect in this case</h2>
+    <div class="callout good">
+      The following should not be used as evidence against SD-AI because they were introduced during the connector-only implementation workflow.
+    </div>
+    <ul>
+      <li>The coexistence of <code>01-specification.md</code> and <code>specification.md</code>.</li>
+      <li>The coexistence of <code>02-architecture.md</code> and <code>architecture/architecture.md</code>.</li>
+      <li>The coexistence of <code>03-security.md</code> and <code>security-review.md</code>.</li>
+      <li>The manually created repository-visible <code>evidence/</code> directory.</li>
+      <li>Any implication that a real local <code>sdai run</code> produced the manually written evidence summaries.</li>
+    </ul>
+    <p>These are still useful examples for designing duplicate detection and evidence packaging, but they are not proof of native SD-AI duplication behavior.</p>
+  </section>
+
+  <section id="root-causes">
+    <h2>7. Root-cause model</h2>
+    <table>
+      <thead><tr><th>Root cause</th><th>Framework behavior</th><th>User-visible symptom</th></tr></thead>
+      <tbody>
+        <tr><td>Criticality coupled to artifact catalog</td><td>Critical mode statically requires many document types.</td><td>Small critical features look over-documented.</td></tr>
+        <tr><td>Generator/validator contract drift</td><td>Generated paths/types differ from validated paths/types.</td><td>SD-AI appears to demand more work after “creating architecture.”</td></tr>
+        <tr><td>Baseline and review are separate documents</td><td>Deterministic and semantic agents both describe the same domain.</td><td>Users see multiple specification/architecture narratives.</td></tr>
+        <tr><td>Advisory agents cannot promote canonical content</td><td>Rich analysis is saved as review output.</td><td>Good architecture exists in review files while required canonical files remain missing.</td></tr>
+        <tr><td>Presence-oriented validation</td><td>Validation reasons in terms of files rather than evidence claims.</td><td>Artifact count becomes a proxy for quality.</td></tr>
+        <tr><td>Distributed evidence persistence</td><td>Different evidence types use different directories/state stores.</td><td>No simple “feature evidence package.”</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="target-model">
+    <h2>8. Recommended target model</h2>
+    <h3>8.1 Replace “required files” with “required engineering evidence”</h3>
+    <pre>Feature intake
+   ↓
+Feature characteristic classification
+   ↓
+Required evidence profile
+   ↓
+Minimum sufficient artifact plan
+   ↓
+Canonical artifact generation/refinement
+   ↓
+Independent review
+   ↓
+Human approval where required
+   ↓
+Implementation + tests
+   ↓
+Evidence manifest + validation</pre>
+
+    <h3>8.2 Example feature characteristics</h3>
+    <table>
+      <thead><tr><th>Characteristic</th><th>Evidence implication</th></tr></thead>
+      <tbody>
+        <tr><td>REST API</td><td>Require versioned OpenAPI contract.</td></tr>
+        <tr><td>Asynchronous events</td><td>Require AsyncAPI/event schema; otherwise do not require it.</td></tr>
+        <tr><td>Persistent data</td><td>Require data model, retention, migration, and recovery evidence.</td></tr>
+        <tr><td>Security-sensitive trust boundary</td><td>Require threat model and security approval.</td></tr>
+        <tr><td>External provider dependency</td><td>Require integration contract, failure modes, timeout/retry assumptions.</td></tr>
+        <tr><td>Material technology choice</td><td>Require ADR.</td></tr>
+        <tr><td>Multiple deployables</td><td>Require component/container deployment view.</td></tr>
+        <tr><td>Complex runtime interaction</td><td>Require sequence diagram.</td></tr>
+        <tr><td>Simple single-service interaction</td><td>Allow sequence section in architecture doc instead of mandatory separate diagram if policy permits.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>8.3 Introduce canonical artifact ownership</h3>
+    <p>Each logical artifact role should have exactly one canonical source. Reviews should reference it, propose patches, or produce findings against it.</p>
+    <pre>Canonical:
+  specification.md
+  architecture/architecture.md
+  contracts/openapi.yaml
+  security/threat-model.md
+  tasks.yaml
+
+Review/evidence:
+  reviews/requirements.json
+  reviews/architecture.json
+  reviews/security.json
+  evidence/manifest.json</pre>
+    <p>The review artifact should not become a competing source of business or architecture truth.</p>
+
+    <h3>8.4 Add evidence manifest</h3>
+    <p>A generated manifest could provide one index:</p>
+    <pre>{
+  "feature": "SIGN-001",
+  "assurance": "critical",
+  "execution_profile": "enterprise",
+  "evidence": [
+    {"id":"requirements", "artifact":"specification.md", "status":"approved"},
+    {"id":"api-contract", "artifact":"contracts/openapi.yaml", "status":"validated"},
+    {"id":"threat-model", "artifact":"security/threat-model.md", "status":"approved"},
+    {"id":"tests", "source":"quality-gate:tests", "status":"passed"}
+  ]
+}</pre>
+    <p>The manifest should index evidence, not duplicate it.</p>
+  </section>
+
+  <section id="priorities">
+    <h2>9. Improvement priorities</h2>
+    <table>
+      <thead><tr><th>Priority</th><th>Improvement</th><th>Reason</th><th>Expected benefit</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge p0">P0</span></td><td>Make generator and validator share one artifact contract/schema.</td><td>Current deterministic output can fail the framework’s own structural expectations.</td><td>Eliminates internal lifecycle contradiction.</td></tr>
+        <tr><td><span class="badge p0">P0</span></td><td>Separate assurance level from artifact/evidence profile.</td><td>Critical does not always mean architecturally complex.</td><td>Maintains governance while reducing unnecessary documents.</td></tr>
+        <tr><td><span class="badge p1">P1</span></td><td>Use conditional evidence requirements derived from feature characteristics.</td><td>Not every feature has REST, events, persistence, or complex deployment.</td><td>More precise validation.</td></tr>
+        <tr><td><span class="badge p1">P1</span></td><td>Define one canonical owner for each logical artifact.</td><td>Baseline and review overlap today.</td><td>Removes source-of-truth ambiguity.</td></tr>
+        <tr><td><span class="badge p1">P1</span></td><td>Allow review agents to propose structured patches/promotions to canonical artifacts.</td><td>Rich advisory output otherwise lives separately.</td><td>Keeps review independence without duplicate narrative files.</td></tr>
+        <tr><td><span class="badge p1">P1</span></td><td>Add evidence manifest/index.</td><td>Evidence is currently fragmented.</td><td>One command/file can answer “is this feature complete and why?”</td></tr>
+        <tr><td><span class="badge p2">P2</span></td><td>Support artifact coalescing.</td><td>Several logical evidence requirements can be satisfied in one document.</td><td>Less repository noise for small services.</td></tr>
+        <tr><td><span class="badge p2">P2</span></td><td>Add duplicate/canonical-role detection.</td><td>Competing files are easy to create outside the happy path.</td><td>Prevents confusion such as the SIGN-001 numbered duplicates.</td></tr>
+        <tr><td><span class="badge p2">P2</span></td><td>Split lifecycle naming into assurance + execution profile.</td><td>Current names represent different dimensions.</td><td>Clearer configuration and documentation.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="acceptance-tests">
+    <h2>10. Acceptance tests for future SD-AI improvements</h2>
+    <p>These tests can be used as framework-level acceptance criteria when changes are implemented later.</p>
+
+    <h3>AT-01 — Generated baseline is structurally valid</h3>
+    <p><strong>Given</strong> a new feature and a selected evidence profile, <strong>when</strong> SD-AI runs deterministic baseline generation, <strong>then</strong> every artifact claimed as generated must satisfy the same path/type schema used by validation.</p>
+
+    <h3>AT-02 — Critical small service does not receive irrelevant artifacts</h3>
+    <p><strong>Given</strong> a security-critical synchronous REST service with no events and no database, <strong>then</strong> SD-AI must not require AsyncAPI/event artifacts or data-model artifacts solely because the assurance level is critical.</p>
+
+    <h3>AT-03 — REST contract is required when REST is present</h3>
+    <p><strong>Given</strong> a feature exposing a REST endpoint, <strong>then</strong> a versioned OpenAPI contract must be part of the required evidence set.</p>
+
+    <h3>AT-04 — Review does not create a competing source of truth</h3>
+    <p><strong>Given</strong> an AI requirements or architecture review, <strong>then</strong> domain changes are represented as findings or a proposed canonical patch; the review output is not treated as a second approved specification or architecture.</p>
+
+    <h3>AT-05 — Evidence can be queried from one index</h3>
+    <p><strong>Given</strong> a partially or fully executed workflow, <strong>then</strong> a single command or manifest lists every required evidence item, producer, artifact/source, current status, approval state, and blocking reason.</p>
+
+    <h3>AT-06 — Duplicate role detection</h3>
+    <p><strong>Given</strong> both <code>01-specification.md</code> and canonical <code>specification.md</code>, <strong>then</strong> SD-AI warns that multiple files appear to claim the specification role and identifies the configured canonical artifact.</p>
+
+    <h3>AT-07 — Waiver is semantic, not a shortcut</h3>
+    <p><strong>Given</strong> a required evidence class that is genuinely not applicable, <strong>then</strong> SD-AI records structured N/A rationale and approval where policy requires it; it must not generate a meaningless placeholder document merely to pass validation.</p>
+
+    <h3>AT-08 — Review independence remains intact</h3>
+    <p><strong>Given</strong> canonical artifacts generated or edited by an implementation-capable agent, <strong>then</strong> architecture/security review must remain an independent step with separate findings and approval status.</p>
+
+    <h3>AT-09 — Re-running a lifecycle is idempotent</h3>
+    <p><strong>Given</strong> an existing feature with canonical artifacts, <strong>when</strong> a deterministic or semantic lifecycle step is re-run, <strong>then</strong> SD-AI updates or reviews the configured canonical artifact instead of creating a second naming convention.</p>
+
+    <h3>AT-10 — Artifact count is not the success metric</h3>
+    <p><strong>Given</strong> one architecture document that contains all required logical evidence sections allowed by policy, <strong>then</strong> validation can succeed without requiring artificial splitting into multiple markdown files.</p>
+  </section>
+
+  <section id="case-study">
+    <h2>11. SIGN-001 ideal artifact profile under the proposed model</h2>
+    <p>Script signing is security-sensitive but relatively small in topology. A more precise profile would likely be:</p>
+    <table>
+      <thead><tr><th>Evidence</th><th>Required?</th><th>Suggested artifact</th><th>Reason</th></tr></thead>
+      <tbody>
+        <tr><td>Requirements + acceptance criteria</td><td>Yes</td><td><code>specification.md</code></td><td>Defines supported script type, inputs, signing behavior, errors, limits, and trust caveats.</td></tr>
+        <tr><td>Architecture decisions and trade-offs</td><td>Yes</td><td><code>architecture/architecture.md</code></td><td>Covers synchronous service, Jsign, DigiCert remote key, temp-file boundary, deployment.</td></tr>
+        <tr><td>Material decision record</td><td>Yes</td><td><code>adr/ADR-001-remote-signing.md</code></td><td>Private key must remain outside service; Jsign + DigiCert is material.</td></tr>
+        <tr><td>REST contract</td><td>Yes</td><td><code>contracts/openapi.yaml</code></td><td>Service exposes <code>POST /api/v1/scripts/sign</code>.</td></tr>
+        <tr><td>Threat model</td><td>Yes</td><td><code>security/threat-model.md</code></td><td>Signing-oracle abuse and signing credentials are critical trust boundaries.</td></tr>
+        <tr><td>Sequence behavior</td><td>Useful/required by policy</td><td>Sequence section or <code>architecture/diagrams/signing-sequence.puml</code></td><td>Clarifies temp file → Jsign → DigiCert → timestamp → cleanup flow.</td></tr>
+        <tr><td>Context/component view</td><td>Yes, but coalescible</td><td>One small component diagram inside architecture package</td><td>Caller, service, DigiCert signing service, TSA, secret source.</td></tr>
+        <tr><td>Async/event contract</td><td>No</td><td>N/A rationale</td><td>Initial implementation is synchronous and publishes no domain events.</td></tr>
+        <tr><td>Database/data model</td><td>No</td><td>N/A rationale</td><td>Initial service is stateless.</td></tr>
+        <tr><td>Tasks + traceability</td><td>Yes</td><td><code>tasks.yaml</code></td><td>Connects FR/NFR/AC to implementation/test work.</td></tr>
+        <tr><td>Review evidence</td><td>Yes</td><td>Structured review findings + evidence manifest</td><td>Preserves independent governance without duplicating canonical documents.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout good">
+      The objective is <strong>not</strong> to make SD-AI less rigorous. The objective is to make rigor proportional, traceable, and evidence-driven so that a critical service receives strong security and approval controls without automatically receiving every possible architecture document.
+    </div>
+  </section>
+
+  <section id="roadmap">
+    <h2>12. Suggested SD-AI implementation roadmap</h2>
+    <h3>Phase 1 — Fix internal contracts</h3>
+    <ol>
+      <li>Create one shared artifact-role registry/schema used by scaffold, generators, semantic agents, and validators.</li>
+      <li>Make deterministic generator paths exactly match the configured canonical paths.</li>
+      <li>Add framework tests proving generated baseline artifacts are recognized by validation.</li>
+      <li>Add duplicate-role warnings.</li>
+    </ol>
+
+    <h3>Phase 2 — Introduce evidence profiles</h3>
+    <ol>
+      <li>Separate assurance level from execution profile.</li>
+      <li>Classify feature characteristics such as REST, events, persistence, external provider, security boundary, multiple deployables.</li>
+      <li>Resolve characteristics into logical evidence requirements.</li>
+      <li>Support structured N/A/waiver rationale for genuinely irrelevant evidence.</li>
+    </ol>
+
+    <h3>Phase 3 — Canonical artifact promotion</h3>
+    <ol>
+      <li>Represent semantic review output as findings and proposed edits against canonical artifacts.</li>
+      <li>Add approval/promote semantics rather than creating parallel authoritative narratives.</li>
+      <li>Make reruns idempotent.</li>
+    </ol>
+
+    <h3>Phase 4 — Evidence consolidation</h3>
+    <ol>
+      <li>Add <code>evidence/manifest.json</code> generated from actual workflow state.</li>
+      <li>Add optional human-readable <code>evidence/summary.md</code> generated from the manifest.</li>
+      <li>Index test gates, review findings, approvals, plugin evidence, worktree evidence, and validation results without copying their content.</li>
+      <li>Add a command such as <code>sdai evidence SIGN-001</code> to answer completeness and blockers.</li>
+    </ol>
+
+    <h3>Phase 5 — Artifact coalescing and policy sophistication</h3>
+    <ol>
+      <li>Allow policy to state that one artifact can satisfy multiple logical evidence classes.</li>
+      <li>Validate required headings/claims/relationships rather than only independent paths.</li>
+      <li>Keep strict file separation available for organizations that want it.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>13. Review checklist</h2>
+    <p>Use this checklist when deciding which SD-AI improvements to implement first.</p>
+    <ul>
+      <li>Does a deterministic generator produce artifacts the validator recognizes?</li>
+      <li>Can critical assurance be selected without automatically requiring irrelevant artifact classes?</li>
+      <li>Is there exactly one canonical specification and one canonical architecture source for a feature?</li>
+      <li>Can AI reviews improve canonical artifacts without becoming competing sources of truth?</li>
+      <li>Can a user identify all blocking evidence from one command or manifest?</li>
+      <li>Can a non-applicable artifact be explicitly justified instead of replaced by boilerplate?</li>
+      <li>Can small features coalesce logical evidence into fewer files while maintaining rigorous validation?</li>
+      <li>Are assurance level and execution/governance profile configured independently?</li>
+      <li>Does rerunning SD-AI avoid duplicate artifacts?</li>
+      <li>Are review, approval, implementation, and test responsibilities still independently auditable?</li>
+    </ul>
+  </section>
+
+  <footer>
+    SD-AI Improvement Review — SIGN-001. Analysis document only; no framework fixes are included in this commit.
+  </footer>
+</main>
+</body>
+</html>
