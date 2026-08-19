@@ -1,0 +1,27 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: script-sign
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+signing:
+  provider: digicert-one
+  max-script-bytes: ${SIGNING_MAX_SCRIPT_BYTES:1048576}
+  digicert:
+    endpoint: ${DIGICERT_ONE_ENDPOINT:https://clientauth.one.digicert.com}
+    api-key: ${DIGICERT_ONE_API_KEY:}
+    client-certificate-path: ${DIGICERT_ONE_CLIENT_CERT_PATH:}
+    client-certificate-password: ${DIGICERT_ONE_CLIENT_CERT_PASSWORD:}
+    alias: ${DIGICERT_ONE_KEYPAIR_ALIAS:}
+  timestamp:
+    enabled: ${SIGNING_TIMESTAMP_ENABLED:true}
+    authority: ${SIGNING_TIMESTAMP_AUTHORITY:http://timestamp.digicert.com}
+    retries: ${SIGNING_TIMESTAMP_RETRIES:3}
+    retry-wait-seconds: ${SIGNING_TIMESTAMP_RETRY_WAIT_SECONDS:2}
