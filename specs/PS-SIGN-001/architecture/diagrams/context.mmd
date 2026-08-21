@@ -1,0 +1,4 @@
+flowchart LR
+    Caller["Authorized service caller"] -->|"HTTPS JSON"| API["PowerShell Signing Service"]
+    API -->|"RFC 3161 over HTTPS"| TSA["Trusted Timestamp Authority"]
+    API -->|"read-only secret"| Identity["PKCS#12 signing identity"]

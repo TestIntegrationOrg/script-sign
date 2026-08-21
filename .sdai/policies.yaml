@@ -1,0 +1,17 @@
+version: 2
+change_classification:
+  light:
+    examples: [bug, logging, small-refactor]
+  standard:
+    examples: [feature, api-change, integration]
+  critical:
+    examples: [security, architecture, data-model, cross-service]
+approvals:
+  standard: [spec]
+  critical: [spec, architecture, security]
+agent_execution:
+  advisory:
+    repository_write: false
+  workspace-write:
+    repository_write: true
+    requires_explicit_cli_flag: true

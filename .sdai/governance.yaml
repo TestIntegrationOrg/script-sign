@@ -1,0 +1,12 @@
+version: 1
+workflow:
+  enforce: true
+  max_parallelism: 4
+  allowed_workspace_write_profiles:
+  - codex
+  require_prior_approval_for_workspace_write: true
+quality:
+  required_gates:
+    light: [tests]
+    standard: [tests]
+    critical: [tests]

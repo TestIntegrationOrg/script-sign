@@ -1,0 +1,6 @@
+flowchart TB
+    Controller["Signing REST Controller"] --> App["PowerShell Signing Service"]
+    App --> Validator["Input and size rules"]
+    App --> Adapter["Jsign Authenticode Adapter"]
+    Adapter --> Identity["PKCS#12 Identity"]
+    Adapter --> Temp["Ephemeral .ps1 file"]

@@ -1,0 +1,69 @@
+version: 5
+name: agentic
+validation_mode: critical
+steps:
+  - id: spec-baseline
+    type: deterministic
+    action: specify
+    description: Create the traceable specification baseline.
+
+  - id: requirements-review
+    type: agent
+    agent: requirements-analyst
+    capability: requirements
+    mode: advisory
+    save_as: ai/requirements-review.md
+
+  - id: architecture-baseline
+    type: deterministic
+    action: architect
+
+  - id: architecture-review
+    type: agent
+    agent: architect
+    capability: architecture
+    mode: advisory
+    save_as: ai/architecture-review.md
+
+  - id: security-review
+    type: agent
+    agent: security-reviewer
+    capability: security
+    mode: advisory
+    save_as: ai/security-review.md
+
+  - id: architecture-approval
+    type: approval
+    gate: architecture
+    description: Human approval required before workspace-writing implementation agents.
+
+  - id: plan
+    type: deterministic
+    action: plan
+
+  - id: implementation
+    type: agent
+    agent: developer
+    capability: coding
+    profile: codex
+    mode: workspace-write
+    save_as: ai/implementation.md
+
+  - id: code-review
+    type: agent
+    agent: code-reviewer
+    capability: review
+    profile: codex
+    mode: advisory
+    save_as: ai/code-review.md
+
+  - id: testing
+    type: agent
+    agent: tester
+    capability: testing
+    profile: codex
+    mode: workspace-write
+    save_as: ai/testing.md
+
+  - id: validate
+    type: validate

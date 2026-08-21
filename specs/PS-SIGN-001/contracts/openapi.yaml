@@ -1,0 +1,102 @@
+openapi: 3.1.0
+info:
+  title: PowerShell Script Signing API
+  version: 1.0.0
+  description: Signs an unsigned PowerShell script with Windows Authenticode.
+paths:
+  /api/v1/powershell/signatures:
+    post:
+      operationId: signPowerShellScript
+      summary: Sign an unsigned PowerShell script
+      parameters:
+        - in: header
+          name: X-Correlation-ID
+          required: false
+          schema:
+            type: string
+            maxLength: 128
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignScriptRequest'
+      responses:
+        '200':
+          description: Script signed successfully
+          headers:
+            X-Correlation-ID:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignScriptResponse'
+        '400':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '413':
+          $ref: '#/components/responses/Problem'
+        '503':
+          $ref: '#/components/responses/Problem'
+components:
+  schemas:
+    SignScriptRequest:
+      type: object
+      additionalProperties: false
+      required: [fileName, scriptContent]
+      properties:
+        fileName:
+          type: string
+          minLength: 5
+          maxLength: 128
+          pattern: '^[A-Za-z0-9][A-Za-z0-9._ -]*\.[Pp][Ss]1$'
+          examples: [install.ps1]
+        scriptContent:
+          type: string
+          minLength: 1
+          description: Unsigned PowerShell source. The configured UTF-8 byte limit applies.
+          examples: ['Write-Output "Hello"']
+    SignScriptResponse:
+      type: object
+      additionalProperties: false
+      required: [fileName, signedScript, digestAlgorithm, timestamped, signerSubject, certificateSerialNumber]
+      properties:
+        fileName:
+          type: string
+        signedScript:
+          type: string
+        digestAlgorithm:
+          type: string
+          const: SHA-256
+        timestamped:
+          type: boolean
+        signerSubject:
+          type: string
+        certificateSerialNumber:
+          type: string
+    Problem:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+        correlationId:
+          type: string
+  responses:
+    Problem:
+      description: Controlled RFC 9457 problem response
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'

@@ -1,0 +1,17 @@
+version: 2
+principles:
+  - spec-first
+  - architecture-as-code
+  - human-approval-for-critical-changes
+  - least-privilege-agents
+  - provider-neutral-agent-routing
+engineering:
+  language: unspecified
+  architecture_style: unspecified
+security:
+  secrets_in_prompts: forbidden
+  private_keys_in_prompts: forbidden
+  external_agent_default_mode: advisory
+quality:
+  tests_required: true
+  traceability_required: true

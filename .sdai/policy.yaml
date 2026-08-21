@@ -1,0 +1,18 @@
+version: 1
+providers: {}
+capabilities: {}
+execution:
+  workspace_write: true
+  require_prior_approval_for_workspace_write: true
+  allow_force_approval_bypass: false
+  protected_paths:
+  - .git/**
+  - .github/workflows/**
+  - .sdai/policy.yaml
+  - .sdai/approval-policies.yaml
+  - .sdai/governance.yaml
+skills:
+  required: {}
+architecture_validation:
+  required: {}
+  allow_waivers: false

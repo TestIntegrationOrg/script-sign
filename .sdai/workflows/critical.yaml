@@ -1,0 +1,8 @@
+name: critical
+steps:
+  - specify
+  - architect
+  - security
+  - plan
+  - implement
+  - validate

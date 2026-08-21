@@ -1,0 +1,3 @@
+name: secure-coding
+description: Apply secure implementation and review practices.
+capabilities: [coding, review, security]

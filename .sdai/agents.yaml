@@ -1,0 +1,41 @@
+version: 1
+profiles:
+  codex:
+    provider: codex
+    enabled: true
+    prompt: auto
+    capabilities: [requirements, architecture, planning, coding, review, testing, security, documentation]
+    skills: [spec-traceability, architecture-review, secure-coding, test-design]
+    timeout_seconds: 900
+
+  copilot:
+    provider: copilot
+    enabled: true
+    prompt: auto
+    capabilities: [requirements, architecture, planning, coding, review, testing, security, documentation]
+    skills: [spec-traceability, architecture-review, secure-coding, test-design]
+    timeout_seconds: 900
+
+  claude:
+    provider: claude
+    enabled: true
+    prompt: auto
+    capabilities: [requirements, architecture, planning, coding, review, testing, security, documentation]
+    skills: [spec-traceability, architecture-review, secure-coding, test-design]
+    timeout_seconds: 900
+
+  gemini:
+    provider: gemini
+    enabled: true
+    prompt: auto
+    capabilities: [requirements, architecture, planning, coding, review, testing, security, documentation]
+    skills: [spec-traceability, architecture-review, secure-coding, test-design]
+    timeout_seconds: 900
+
+  local-command:
+    provider: command
+    enabled: false
+    command: [my-agent]
+    prompt: auto
+    capabilities: [requirements, architecture, planning, coding, review, testing, security, documentation]
+    skills: [spec-traceability]

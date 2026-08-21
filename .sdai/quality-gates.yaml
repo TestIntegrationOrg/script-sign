@@ -1,0 +1,37 @@
+version: 1
+gates:
+  tests:
+    enabled: true
+    command:
+    - ./mvnw
+    - --batch-mode
+    - --no-transfer-progress
+    - clean
+    - verify
+    timeout_seconds: 900
+    success_exit_codes:
+    - 0
+    max_output_chars: 200000
+  trivy:
+    enabled: false
+    command:
+    - trivy
+    - fs
+    - --exit-code
+    - '1'
+    - --severity
+    - HIGH,CRITICAL
+    - .
+    timeout_seconds: 1200
+    success_exit_codes:
+    - 0
+    max_output_chars: 200000
+  sonar:
+    enabled: false
+    command:
+    - sonar-scanner
+    - -Dsonar.qualitygate.wait=true
+    timeout_seconds: 1800
+    success_exit_codes:
+    - 0
+    max_output_chars: 200000

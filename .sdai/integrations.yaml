@@ -1,0 +1,13 @@
+version: 1
+github:
+  enabled: true
+  transport: gh-cli
+  credentials: managed-by-gh
+jira:
+  enabled: false
+  transport: rest
+  environment:
+  - JIRA_BASE_URL
+  - JIRA_EMAIL
+  - JIRA_API_TOKEN
+  - JIRA_BEARER_TOKEN

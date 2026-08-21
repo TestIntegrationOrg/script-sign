@@ -1,0 +1,22 @@
+version: 1
+tasks:
+  - id: T-001
+    title: Implement versioned REST contract and validation
+    traces_to: [FR-001, FR-002, FR-005, NFR-003]
+    status: done
+  - id: T-002
+    title: Implement Jsign PKCS#12 Authenticode adapter and ephemeral lifecycle
+    traces_to: [FR-003, FR-004, NFR-001, NFR-002, NFR-004]
+    status: done
+  - id: T-003
+    title: Add controlled errors, correlation IDs, and health endpoints
+    traces_to: [FR-005, FR-006, NFR-005]
+    status: done
+  - id: T-004
+    title: Add deployment, security, timestamp, and Windows verification documentation
+    traces_to: [FR-004, NFR-001, NFR-006]
+    status: done
+  - id: T-005
+    title: Add automated cryptographic tests and run Maven plus SD-AI validation
+    traces_to: [AC-001, AC-002, AC-003, AC-004, AC-005, AC-006, AC-007]
+    status: done

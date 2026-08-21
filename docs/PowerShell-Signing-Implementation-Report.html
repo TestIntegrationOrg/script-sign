@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PowerShell Signing Microservice — Implementation and SD-AI Audit Report</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #5e6b81;
+      --line: #d9e0ea;
+      --panel: #f6f8fb;
+      --brand: #3157d5;
+      --brand-dark: #20398e;
+      --good: #16794a;
+      --warn: #a15c00;
+      --bad: #b52d3a;
+      --info: #176b9b;
+      --code: #eef2f8;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: #fff;
+      color: var(--ink);
+      font: 15px/1.58 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    a { color: var(--brand-dark); text-underline-offset: 2px; }
+    header {
+      color: #fff;
+      background: linear-gradient(135deg, #14234c, #3157d5 62%, #4d79ef);
+      padding: 56px max(24px, calc((100vw - 1120px) / 2));
+    }
+    header .eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; opacity: .78; }
+    header h1 { max-width: 900px; margin: 12px 0 16px; font-size: clamp(31px, 5vw, 52px); line-height: 1.08; }
+    header p { max-width: 850px; margin: 0; font-size: 18px; opacity: .92; }
+    .header-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+    .header-meta span { border: 1px solid rgba(255,255,255,.35); border-radius: 999px; padding: 6px 11px; background: rgba(255,255,255,.08); }
+    .layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 38px; max-width: 1180px; margin: 0 auto; padding: 34px 30px 80px; }
+    nav { position: sticky; top: 20px; align-self: start; border: 1px solid var(--line); border-radius: 14px; padding: 18px; background: #fff; box-shadow: 0 6px 24px rgba(25,41,75,.07); }
+    nav strong { display: block; margin-bottom: 8px; }
+    nav a { display: block; padding: 5px 0; color: var(--muted); text-decoration: none; font-size: 13px; }
+    nav a:hover { color: var(--brand); }
+    main { min-width: 0; }
+    section { margin: 0 0 50px; scroll-margin-top: 20px; }
+    h2 { margin: 0 0 18px; font-size: 28px; line-height: 1.2; border-bottom: 2px solid var(--line); padding-bottom: 9px; }
+    h3 { margin: 26px 0 10px; font-size: 19px; }
+    h4 { margin: 18px 0 8px; font-size: 15px; }
+    p { margin: 8px 0 14px; }
+    .lede { font-size: 18px; color: #32405a; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card { border: 1px solid var(--line); border-radius: 13px; padding: 17px 18px; background: var(--panel); }
+    .card h3, .card h4 { margin-top: 0; }
+    .metric { background: #fff; }
+    .metric .value { display: block; color: var(--brand-dark); font-size: 28px; line-height: 1.1; font-weight: 800; }
+    .metric .label { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+    .callout { margin: 18px 0; padding: 15px 17px; border-left: 5px solid var(--info); border-radius: 8px; background: #edf7fc; }
+    .callout.warn { border-color: var(--warn); background: #fff8e8; }
+    .callout.bad { border-color: var(--bad); background: #fff1f2; }
+    .callout.good { border-color: var(--good); background: #edf9f3; }
+    .badge { display: inline-block; border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; vertical-align: 1px; }
+    .good { color: var(--good); }
+    .bad { color: var(--bad); }
+    .warn-text { color: var(--warn); }
+    .badge.good { background: #dff4e9; }
+    .badge.bad { background: #ffe0e3; }
+    .badge.warn { color: var(--warn); background: #ffefc7; }
+    .badge.info { color: var(--info); background: #dff1fb; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 24px; font-size: 13px; }
+    th, td { border: 1px solid var(--line); padding: 10px 11px; text-align: left; vertical-align: top; }
+    th { background: #eaf0f8; font-weight: 750; }
+    tbody tr:nth-child(even) { background: #fafbfd; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    code { background: var(--code); border-radius: 4px; padding: 1px 4px; font-size: .92em; }
+    pre { overflow-x: auto; padding: 14px 16px; border: 1px solid var(--line); border-radius: 9px; background: #111827; color: #e5ecf8; font-size: 12px; }
+    ul, ol { padding-left: 22px; }
+    li { margin: 5px 0; }
+    .flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 18px 0; }
+    .flow div { position: relative; min-height: 90px; padding: 13px; border: 1px solid #b8c7e7; border-radius: 10px; background: #f2f6ff; }
+    .flow strong { display: block; color: var(--brand-dark); margin-bottom: 5px; }
+    .flow small { color: var(--muted); }
+    .timeline { border-left: 3px solid #c8d5ee; margin-left: 8px; padding-left: 22px; }
+    .event { position: relative; margin: 0 0 20px; }
+    .event::before { content: ""; position: absolute; width: 11px; height: 11px; border-radius: 50%; left: -29px; top: 6px; background: var(--brand); border: 2px solid #fff; box-shadow: 0 0 0 2px #b9c8e7; }
+    .event time { color: var(--muted); font-size: 12px; font-weight: 700; }
+    .event h3 { margin: 2px 0 4px; font-size: 16px; }
+    details { margin: 10px 0; border: 1px solid var(--line); border-radius: 9px; padding: 10px 13px; background: #fff; }
+    summary { cursor: pointer; font-weight: 750; }
+    .priority { white-space: nowrap; }
+    .priority.p0 { color: var(--bad); font-weight: 800; }
+    .priority.p1 { color: var(--warn); font-weight: 800; }
+    .priority.p2 { color: var(--info); font-weight: 800; }
+    footer { border-top: 1px solid var(--line); color: var(--muted); padding: 24px; text-align: center; font-size: 12px; }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      nav { position: static; columns: 2; }
+      nav strong { column-span: all; }
+      .grid.three { grid-template-columns: 1fr 1fr; }
+      .flow { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 620px) {
+      .layout { padding: 24px 16px 60px; }
+      .grid, .grid.three, .flow { grid-template-columns: 1fr; }
+      nav { columns: 1; }
+      table { display: block; overflow-x: auto; }
+    }
+    @media print {
+      nav { display: none; }
+      .layout { display: block; max-width: none; padding: 20px; }
+      header { padding: 30px 20px; }
+      section { break-inside: avoid-page; }
+      a { color: inherit; text-decoration: none; }
+      details { break-inside: avoid; }
+      details > * { display: block; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="eyebrow">Implementation dossier · PS-SIGN-001</div>
+    <h1>PowerShell Authenticode Signing Microservice</h1>
+    <p>A complete account of what the user, Codex, SD-AI, GitHub, and CI did; who made each decision; what failed, was missed, or was skipped; and what must improve before SD-AI is dependable for engineering teams.</p>
+    <div class="header-meta">
+      <span>Report date: 21 August 2026</span>
+      <span>Repository: TestIntegrationOrg/script-sign</span>
+      <span>Feature: PS-SIGN-001</span>
+      <span>PR: #2</span>
+      <span>Final CI: passed</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav aria-label="Report sections">
+      <strong>Contents</strong>
+      <a href="#summary">1. Executive summary</a>
+      <a href="#scope">2. Scope and constraints</a>
+      <a href="#implementation">3. Implementation</a>
+      <a href="#chronology">4. Complete chronology</a>
+      <a href="#decisions">5. Decision register</a>
+      <a href="#ownership">6. Decision ownership</a>
+      <a href="#verification">7. Verification</a>
+      <a href="#tokens">8. Token accounting</a>
+      <a href="#missed">9. Missed and skipped</a>
+      <a href="#sdai-review">10. What SD-AI did wrong</a>
+      <a href="#improvements">11. Engineering improvements</a>
+      <a href="#inventory">12. Artifact inventory</a>
+      <a href="#sources">13. Evidence sources</a>
+    </nav>
+
+    <main>
+      <section id="summary">
+        <h2>1. Executive summary</h2>
+        <p class="lede">The requested service was implemented from a fresh <code>main</code> baseline without using earlier script-signing memory or old branch details. It signs PowerShell source through a synchronous JSON API using Java 17, Spring Boot, Jsign, SHA-256 Authenticode, an externally supplied PKCS#12 identity, and optional RFC 3161 timestamping.</p>
+
+        <div class="grid three">
+          <div class="card metric"><span class="value">324</span><span class="label">Changed files in PR</span></div>
+          <div class="card metric"><span class="value">4,372</span><span class="label">PR additions including report</span></div>
+          <div class="card metric"><span class="value">11 / 11</span><span class="label">Automated tests passed</span></div>
+          <div class="card metric"><span class="value">38</span><span class="label">SD-AI audit events</span></div>
+          <div class="card metric"><span class="value">188</span><span class="label">Provider diagnostic files</span></div>
+          <div class="card metric"><span class="value">900 s</span><span class="label">Agent timeout threshold reached</span></div>
+        </div>
+
+        <div class="callout good"><strong>Final engineering state:</strong> Maven verification passed; real CMS signature verification passed; a packaged-JAR HTTP smoke test passed; GitHub's container build passed; the final SD-AI critical artifact validator passed; and PR #2 is mergeable and remains a draft.</div>
+        <div class="callout warn"><strong>Important qualification:</strong> the SD-AI <em>agentic</em> workflow did not succeed. Its Codex requirements agent produced no first output and timed out after 900 seconds. The application was completed by Codex outside that failed agentic run, using the deterministic artifacts as inputs and then correcting them.</div>
+
+        <h3>Current links and identifiers</h3>
+        <ul>
+          <li>Pull request: <a href="https://github.com/TestIntegrationOrg/script-sign/pull/2">TestIntegrationOrg/script-sign #2</a></li>
+          <li>Implementation head before this report commit: <code>9ba099659f33056007dd6d8cf422ebd38fa57d10</code></li>
+          <li>Successful replacement CI: <a href="https://github.com/TestIntegrationOrg/script-sign/actions/runs/32454003188">run 32454003188</a></li>
+          <li>Base commit: <code>3809f79d4c7e6b658fa36f93ac21363287f6f991</code></li>
+          <li>SD-AI framework: <code>1.0.0</code>, source revision <code>c82068f4cbb8310fe35a448e7c5ba0a048f579f8</code></li>
+        </ul>
+      </section>
+
+      <section id="scope">
+        <h2>2. Scope, instructions, and constraints</h2>
+        <table>
+          <thead><tr><th>Instruction or constraint</th><th>Source / owner</th><th>How it was applied</th></tr></thead>
+          <tbody>
+            <tr><td>Create a microservice that signs a PowerShell script.</td><td>User</td><td>Implemented a synchronous REST service returning signed <code>.ps1</code> source.</td></tr>
+            <tr><td>Use the <code>script-sign</code> repository.</td><td>User</td><td>Work was based on <code>TestIntegrationOrg/script-sign</code>.</td></tr>
+            <tr><td>Do not use existing script-signing memory.</td><td>User's final clarification</td><td>No personal-context or earlier design memory was consulted.</td></tr>
+            <tr><td>Do not use existing branch details; create everything fresh.</td><td>User</td><td>A new branch was created directly from the repository's default <code>main</code> commit.</td></tr>
+            <tr><td>“Everything means everything” in the PR.</td><td>User</td><td>Source, tests, docs, generated SD-AI setup, raw audit ledger, 179 heartbeat records, all provider failures, and evidence were committed. Runtime tooling, virtual environments, build output, and secret material were correctly excluded.</td></tr>
+            <tr><td>Skip dependency graph.</td><td>User</td><td>The unsupported dependency-review CI job was removed; security docs were corrected; replacement CI passed.</td></tr>
+            <tr><td>Do not publish unsafe persistent governance settings.</td><td>Platform safety control</td><td>Generated force-bypass and waiver defaults were changed to secure settings before publication.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Explicit non-goals</h3>
+        <ul>
+          <li>Certificate issuance, renewal, or production key generation.</li>
+          <li>Signing formats other than PowerShell <code>.ps1</code>.</li>
+          <li>Long-term script storage, queues, or asynchronous job orchestration.</li>
+          <li>An identity provider inside the application; authenticated and authorized ingress is a deployment precondition.</li>
+          <li>HSM or remote signing in this iteration; the PKCS#12 adapter is replaceable if that becomes mandatory.</li>
+        </ul>
+      </section>
+
+      <section id="implementation">
+        <h2>3. Implementation delivered</h2>
+        <div class="flow" aria-label="Signing flow">
+          <div><strong>1. HTTP API</strong><small>Validate JSON, leaf <code>.ps1</code> name, content, correlation ID.</small></div>
+          <div><strong>2. Application service</strong><small>Enforce UTF-8 byte limit and reject existing signature blocks.</small></div>
+          <div><strong>3. Jsign adapter</strong><small>Create a request-local signer and apply SHA-256 Authenticode.</small></div>
+          <div><strong>4. Response + cleanup</strong><small>Return signed source and metadata; delete temporary file in <code>finally</code>.</small></div>
+        </div>
+
+        <h3>Technology and behavior</h3>
+        <table>
+          <tbody>
+            <tr><th>Runtime</th><td>Java 17, Spring Boot 3.5.16</td></tr>
+            <tr><th>Signing library</th><td>Jsign 7.5, in process; no command shell or platform-specific executable.</td></tr>
+            <tr><th>Endpoint</th><td><code>POST /api/v1/powershell/signatures</code></td></tr>
+            <tr><th>Input</th><td><code>fileName</code> and <code>scriptContent</code>; unknown fields rejected.</td></tr>
+            <tr><th>Signing identity</th><td>Externally mounted PKCS#12; certificate validity, digital-signature key usage, code-signing EKU, alias, and private key are validated at startup.</td></tr>
+            <tr><th>Timestamping</th><td>Optional, enabled by default, RFC 3161, HTTPS authorities only, bounded retries, fail closed.</td></tr>
+            <tr><th>Data handling</th><td>Memory plus a random ephemeral <code>.ps1</code> file; no database or queue; cleanup after success or failure.</td></tr>
+            <tr><th>Errors</th><td>Controlled RFC 9457 problem responses; no script or secret material returned in error details.</td></tr>
+            <tr><th>Observability</th><td><code>X-Correlation-ID</code>, MDC logging pattern, liveness and readiness endpoints.</td></tr>
+            <tr><th>Deployment</th><td>Non-root multi-stage container, read-only key mount guidance, dedicated temporary directory, CI container build.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Primary production components</h3>
+        <ul>
+          <li><code>ScriptSigningController</code> and API request/response records.</li>
+          <li><code>PowerShellSigningService</code> and <code>ScriptSigningUseCase</code>.</li>
+          <li><code>Pkcs12SigningIdentity</code> and <code>JsignPowerShellScriptSigner</code>.</li>
+          <li><code>CorrelationIdFilter</code> and <code>ApiExceptionHandler</code>.</li>
+          <li><code>SigningProperties</code>, Spring configuration, and Actuator.</li>
+        </ul>
+      </section>
+
+      <section id="chronology">
+        <h2>4. Complete chronology</h2>
+        <p>Times below are from the SD-AI audit where present. Engineering steps outside SD-AI are ordered from the work record and repository/CI evidence.</p>
+
+        <div class="timeline">
+          <div class="event"><time>04:46:57 UTC</time><h3>Fresh critical workflow started</h3><p>SD-AI ran deterministic <code>specify</code>, <code>architect</code>, <code>security</code>, <code>plan</code>, and <code>implement</code> steps. Each produced template artifacts in milliseconds.</p></div>
+          <div class="event"><time>04:46:57 UTC</time><h3>Critical validation failed</h3><p>The generated output did not satisfy its own critical profile. Missing or insufficient items included the RFC, component and sequence diagrams, threat model, OpenAPI contract, and accepted ADR. The initial security review was a checklist placeholder.</p></div>
+          <div class="event"><time>04:47:25 UTC</time><h3>Agentic attempt 1: wrong provider</h3><p>The requirements-review agent was routed to Claude, which was not available. SD-AI recorded <code>ProviderStartupError</code> after 13.1 ms.</p></div>
+          <div class="event"><time>04:47:58 UTC</time><h3>Agentic attempt 2: Codex startup failure</h3><p>Profiles were changed to Codex, but the Codex CLI was not yet available. SD-AI recorded another <code>ProviderStartupError</code> after 14.4 ms.</p></div>
+          <div class="event"><time>04:49:35–05:04:35 UTC</time><h3>Agentic attempt 3: heartbeat without output</h3><p>After Codex CLI installation and login detection, the agent started and emitted 179 heartbeat records. No first output was reported. The provider timed out at 900.074 seconds and the workflow failed.</p></div>
+          <div class="event"><time>Engineering continuation</time><h3>Missing artifacts completed by Codex</h3><p>Codex wrote the detailed requirements, RFC, ADR, architecture alternatives, decision matrix, context/component/sequence diagrams, threat model, OpenAPI contract, task traceability, and evidence. The critical validator then passed.</p></div>
+          <div class="event"><time>Engineering continuation</time><h3>Service implemented</h3><p>Codex selected Java 17/Spring Boot/Jsign, built the REST boundary, configuration, signing identity, adapter, cleanup lifecycle, errors, correlation handling, health endpoints, Maven wrapper, container, CI, and documentation.</p></div>
+          <div class="event"><time>Test cycle</time><h3>Two test-harness defects discovered and fixed</h3><p><code>@TempDir</code> was null under the chosen <code>@BeforeAll</code> lifecycle, so setup moved to <code>@BeforeEach</code>. Mockito inline attachment was blocked by the managed JVM, so the controller was refactored to an interface with a hand-written stub and the subclass mock maker was configured. Detached CMS data was reparsed before cryptographic verification.</p></div>
+          <div class="event"><time>Verification</time><h3>Clean build and runtime smoke passed</h3><p><code>mvn clean verify</code> passed 11 tests. A generated test identity signed a script through the running packaged JAR; readiness, SHA-256 metadata, signature block, and correlation propagation were asserted.</p></div>
+          <div class="event"><time>Publication</time><h3>Unsafe generated policy blocked twice</h3><p>Publication was rejected first for forced approval bypass/unrestricted writes, then for architecture waivers. Codex chose the safer alternative: prior approval required, no force bypass, protected governance/CI paths, no waivers, enforcement enabled, Codex-only write profile, and Maven gates for every change class.</p></div>
+          <div class="event"><time>Publication</time><h3>Git push authentication failed; connector used</h3><p>The clone had no HTTPS credential helper. GitHub's authenticated object API published an atomic 323-file tree and created draft PR #2. The remote tree was verified as 323 blobs and not truncated.</p></div>
+          <div class="event"><time>Initial CI</time><h3>Test and container passed; dependency review failed</h3><p>The repository did not support Dependency Review because Dependency Graph was disabled. This was a capability mismatch, not an application failure.</p></div>
+          <div class="event"><time>User follow-up</time><h3>Dependency graph explicitly skipped</h3><p>The user authorized skipping it. Codex removed the unsupported job, corrected the security documentation, committed <code>9ba0996</code>, updated the PR description, and observed replacement CI pass both remaining jobs.</p></div>
+        </div>
+
+        <details>
+          <summary>SD-AI audit step timing</summary>
+          <table>
+            <thead><tr><th>Workflow / step</th><th>Result</th><th>Measured elapsed time</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>Critical / specify</td><td><span class="badge good">Completed</span></td><td>15.5 ms</td><td>Deterministic template generation.</td></tr>
+              <tr><td>Critical / architect</td><td><span class="badge good">Completed</span></td><td>22.4 ms</td><td>Generated architecture files and initial ADR.</td></tr>
+              <tr><td>Critical / security</td><td><span class="badge good">Completed</span></td><td>37.1 ms</td><td>Generated an incomplete checklist-style security review.</td></tr>
+              <tr><td>Critical / plan</td><td><span class="badge good">Completed</span></td><td>20.3 ms</td><td>Generated generic plan/tasks.</td></tr>
+              <tr><td>Critical / implement</td><td><span class="badge good">Completed</span></td><td>34.2 ms</td><td>Generated an implementation brief, not application source.</td></tr>
+              <tr><td>Critical / validate</td><td><span class="badge bad">Failed</span></td><td>54.1 ms</td><td>Required artifacts were missing.</td></tr>
+              <tr><td>Agentic / Claude requirements review</td><td><span class="badge bad">Startup failure</span></td><td>13.1 ms</td><td>Unavailable provider profile.</td></tr>
+              <tr><td>Agentic / Codex requirements review, attempt 1</td><td><span class="badge bad">Startup failure</span></td><td>14.4 ms</td><td>CLI/provider not ready.</td></tr>
+              <tr><td>Agentic / Codex requirements review, attempt 2</td><td><span class="badge bad">Timeout</span></td><td>900.074 s provider; 901.8 s workflow</td><td>No first output; 179 heartbeat records.</td></tr>
+            </tbody>
+          </table>
+        </details>
+      </section>
+
+      <section id="decisions">
+        <h2>5. Decision register</h2>
+        <table>
+          <thead><tr><th>Decision</th><th>Decision maker / authority</th><th>Why</th><th>Consequence</th></tr></thead>
+          <tbody>
+            <tr><td>Build in <code>script-sign</code> from a new branch based on <code>main</code>.</td><td>User</td><td>Explicit repository and freshness instruction.</td><td>No old branch implementation was reused.</td></tr>
+            <tr><td>Do not use existing script-signing memory.</td><td>User</td><td>Final instruction superseded the earlier contradictory request.</td><td>Design was derived from current requirements, repo state, and primary technical documentation.</td></tr>
+            <tr><td>Commit all project and SD-AI artifacts.</td><td>User</td><td>“Everything means everything.”</td><td>Raw failures and 179 heartbeats remained visible; only generated runtime/build/secret files were excluded.</td></tr>
+            <tr><td>Use in-process Jsign rather than a shell command or asynchronous worker.</td><td>Codex, recorded in ADR; implementation authorized by user</td><td>Best weighted fit for Linux portability, correctness, testability, command-injection safety, and MVP simplicity.</td><td>Java process can access the PKCS#12 private key; remote HSM remains a future adapter.</td></tr>
+            <tr><td>Use Java 17, Spring Boot 3.5.16, and Jsign 7.5.</td><td>Codex</td><td>Available runtime, supported framework baseline, and direct PowerShell Authenticode support.</td><td>Portable Linux build with Windows-compatible output.</td></tr>
+            <tr><td>Use a synchronous JSON endpoint.</td><td>Codex / ADR</td><td>No persistence or queue was justified by current scope.</td><td>Simple contract; callers handle retries; very large/slow workloads would require reassessment.</td></tr>
+            <tr><td>Use a random ephemeral file and delete in <code>finally</code>.</td><td>Codex / ADR</td><td>Jsign operates on a signable file while requirements prohibit retention.</td><td>Small crash-residue risk remains and requires ephemeral-volume cleanup.</td></tr>
+            <tr><td>Reject already signed scripts rather than replace or nest signatures.</td><td>Codex / ADR</td><td>Avoid ambiguous or malicious signature replacement.</td><td>Caller must submit unsigned source.</td></tr>
+            <tr><td>Require authentication/TLS/rate limits at ingress rather than implementing identity in the service.</td><td>Codex architecture and security review</td><td>Identity-provider implementation was outside scope.</td><td>Production is safe only if deployment prerequisites are enforced.</td></tr>
+            <tr><td>Use hand-written controller test stubs instead of runtime Mockito instrumentation.</td><td>Codex</td><td>Managed JVM blocked Byte Buddy self-attachment.</td><td>Tests became environment-independent and the controller gained a clean use-case interface.</td></tr>
+            <tr><td>Harden generated SD-AI governance before publication.</td><td>Platform safety control required action; Codex selected safer settings</td><td>Generated settings enabled forced bypass, approval-free writes, and waivers.</td><td>Writes require approval; sensitive paths are protected; workflow and test gates are enforced.</td></tr>
+            <tr><td>Create a draft PR.</td><td>Codex following GitHub workflow policy</td><td>No explicit request to mark it ready for review.</td><td>PR remains open and mergeable but draft.</td></tr>
+            <tr><td>Skip repository Dependency Graph / Dependency Review.</td><td>User</td><td>Initial CI proved the feature was unsupported for this repository.</td><td>CI passes, but automated dependency vulnerability review is a known gap.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="ownership">
+        <h2>6. Who did what</h2>
+        <div class="grid">
+          <div class="card"><h3>User / repository owner</h3><ul><li>Defined the product outcome and target repository.</li><li>Required a fresh implementation with no prior signing memory or branch detail.</li><li>Required every project/SD-AI artifact in the PR.</li><li>Authorized skipping Dependency Graph.</li><li>Did not explicitly approve insecure SD-AI bypass settings; they were not published.</li></ul></div>
+          <div class="card"><h3>SD-AI deterministic workflow</h3><ul><li>Created feature scaffolding and initial template artifacts.</li><li>Recorded an append-only 38-event audit ledger.</li><li>Defined critical required artifact types.</li><li>Ran validation and exposed missing artifacts.</li><li>Did not create working application code despite naming a step <code>implement</code>.</li></ul></div>
+          <div class="card"><h3>SD-AI agent runtime</h3><ul><li>Attempted requirements review with Claude and Codex profiles.</li><li>Recorded two startup failures and one 900-second timeout.</li><li>Emitted heartbeats and timing diagnostics.</li><li>Produced no review content and never reached later agentic phases such as architecture, implementation, testing, or code review.</li></ul></div>
+          <div class="card"><h3>Codex / implementation agent</h3><ul><li>Completed and corrected requirements, design, security, and contracts.</li><li>Implemented service, tests, deployment, CI, docs, and evidence.</li><li>Diagnosed test/runtime/provider/tooling failures.</li><li>Hardened SD-AI governance.</li><li>Published the atomic tree, opened and updated PR #2, and monitored CI.</li></ul></div>
+          <div class="card"><h3>GitHub and GitHub Actions</h3><ul><li>Stored the final branch and PR.</li><li>Built the non-root container successfully.</li><li>Ran Maven verification successfully.</li><li>Reported Dependency Review as unsupported, enabling a clear follow-up decision.</li></ul></div>
+          <div class="card"><h3>Platform safety controls</h3><ul><li>Prevented publication of forced approval bypass and unrestricted workspace-write policy.</li><li>Prevented publication of enabled architecture waivers.</li><li>Required either explicit informed approval or safer configuration; the safer path was chosen.</li></ul></div>
+        </div>
+      </section>
+
+      <section id="verification">
+        <h2>7. Verification and evidence</h2>
+        <table>
+          <thead><tr><th>Check</th><th>Result</th><th>Evidence / detail</th></tr></thead>
+          <tbody>
+            <tr><td>Maven clean verification</td><td><span class="badge good">Passed</span></td><td>46.517 seconds; 11 tests, 0 failures, 0 errors, 0 skipped.</td></tr>
+            <tr><td>PKCS#12 identity tests</td><td><span class="badge good">2 passed</span></td><td>Valid identity and invalid identity/configuration paths.</td></tr>
+            <tr><td>Signing service tests</td><td><span class="badge good">5 passed</span></td><td>Real signature, Authenticode digest equality, embedded CMS cryptographic verification, cleanup, validation, UTF-8 byte limit.</td></tr>
+            <tr><td>Controller tests</td><td><span class="badge good">4 passed</span></td><td>Success response, correlation propagation, input failure redaction, 413 mapping, unknown JSON rejection.</td></tr>
+            <tr><td>Packaged-JAR HTTP smoke</td><td><span class="badge good">Passed</span></td><td>Generated ephemeral identity; readiness <code>UP</code>; real signature block and correlation ID returned.</td></tr>
+            <tr><td>SD-AI critical artifact validation</td><td><span class="badge good">Passed</span></td><td><code>Validation passed for PS-SIGN-001 (critical)</code>.</td></tr>
+            <tr><td>YAML parsing</td><td><span class="badge good">Passed</span></td><td>All project YAML loaded successfully.</td></tr>
+            <tr><td>Secret-pattern scan</td><td><span class="badge good">Passed</span></td><td>No common access token or private-key patterns found in committed project files.</td></tr>
+            <tr><td>Initial remote tree integrity</td><td><span class="badge good">Passed</span></td><td>323 implementation blobs plus 67 directories; GitHub reported <code>truncated: false</code>. This report is the 324th PR file.</td></tr>
+            <tr><td>GitHub CI run #2</td><td><span class="badge good">Passed</span></td><td><code>verify</code> and <code>container</code> jobs both succeeded.</td></tr>
+            <tr><td>SD-AI agentic workflow</td><td><span class="badge bad">Failed</span></td><td>No first output; requirements agent timed out at 900 seconds.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="tokens">
+        <h2>8. Input/output token accounting</h2>
+        <div class="callout bad"><strong>Exact total token usage cannot be calculated from the available evidence.</strong> Neither the SD-AI audit schema nor its provider diagnostics contain input-token, output-token, cached-token, reasoning-token, or cost fields. ChatGPT Work/Codex also did not expose per-turn token telemetry to this session. Reporting a numeric estimate as actual usage would be fabricated.</div>
+
+        <h3>What can be stated exactly</h3>
+        <table>
+          <thead><tr><th>Step</th><th>Input tokens</th><th>Output tokens</th><th>Total</th><th>Evidence and interpretation</th></tr></thead>
+          <tbody>
+            <tr><td>SD-AI deterministic: specify</td><td>0 model tokens</td><td>0 model tokens</td><td>0</td><td>Step kind is <code>deterministic</code>; it rendered templates without an AI provider.</td></tr>
+            <tr><td>SD-AI deterministic: architect</td><td>0 model tokens</td><td>0 model tokens</td><td>0</td><td>Deterministic template generation.</td></tr>
+            <tr><td>SD-AI deterministic: security</td><td>0 model tokens</td><td>0 model tokens</td><td>0</td><td>Deterministic template generation.</td></tr>
+            <tr><td>SD-AI deterministic: plan</td><td>0 model tokens</td><td>0 model tokens</td><td>0</td><td>Deterministic template generation.</td></tr>
+            <tr><td>SD-AI deterministic: implement brief</td><td>0 model tokens</td><td>0 model tokens</td><td>0</td><td>Deterministic template generation; no source implementation.</td></tr>
+            <tr><td>SD-AI deterministic: validate</td><td>0 model tokens</td><td>0 model tokens</td><td>0</td><td>File/rule validation, not an AI call.</td></tr>
+            <tr><td>Claude requirements agent startup failure</td><td>Not recorded</td><td>0 observed</td><td>Not computable</td><td>No first-output metric; startup failed in 13.1 ms. A provider may have consumed no model tokens, but the schema does not prove that.</td></tr>
+            <tr><td>Codex requirements agent startup failure</td><td>Not recorded</td><td>0 observed</td><td>Not computable</td><td>No first output; startup failed in 14.4 ms.</td></tr>
+            <tr><td>Codex requirements agent timeout</td><td>Not recorded</td><td>0 observed by SD-AI</td><td>Not computable</td><td>179 heartbeats, no first output, 900.074-second provider timeout. Processing/billable tokens, if any, were not reported.</td></tr>
+            <tr><td>Codex implementation work outside SD-AI</td><td>Not exposed</td><td>Not exposed</td><td>Not computable</td><td>Work Mode provided no per-turn token counters in the accessible logs.</td></tr>
+            <tr><td>Shell, Maven, GitHub API, and CI operations</td><td>Not applicable as LLM tokens</td><td>Not applicable</td><td>N/A</td><td>These have command/API data sizes and execution time, not model-token telemetry.</td></tr>
+          </tbody>
+        </table>
+
+        <div class="grid">
+          <div class="card"><h3>Recorded model-token total</h3><p><strong>0 tokens are positively recorded</strong>, because the telemetry contains no token counters. This is not the same as zero tokens consumed.</p></div>
+          <div class="card"><h3>Actual model-token total</h3><p><strong>Unknown / not computable.</strong> Input + output + cached + reasoning token fields are required to calculate it.</p></div>
+        </div>
+
+        <h3>Minimum telemetry SD-AI should add</h3>
+        <pre>{
+  "usage": {
+    "inputTokens": 1234,
+    "cachedInputTokens": 900,
+    "outputTokens": 456,
+    "reasoningTokens": 200,
+    "totalTokens": 1890,
+    "estimatedCost": {"currency": "USD", "amount": 0.0123},
+    "providerRequestId": "opaque-id",
+    "usageSource": "provider-reported"
+  }
+}</pre>
+        <p>Usage must be emitted for every attempt, including startup failure, cancellation, timeout, retry, and partial output. Workflow summaries should aggregate usage without double-counting cached tokens or retried calls.</p>
+      </section>
+
+      <section id="missed">
+        <h2>9. What was missed, skipped, or left conditional</h2>
+        <table>
+          <thead><tr><th>Item</th><th>Status</th><th>Why</th><th>Risk / follow-up</th></tr></thead>
+          <tbody>
+            <tr><td>Live RFC 3161 timestamp integration test</td><td><span class="badge warn">Skipped locally</span></td><td>Tests must not require an external TSA; timestamping was disabled for deterministic cryptographic tests and smoke testing.</td><td>Run a controlled staging test against approved TSA endpoints before production release.</td></tr>
+            <tr><td>Windows <code>Get-AuthenticodeSignature</code> execution</td><td><span class="badge warn">Not run</span></td><td>Implementation environment was Linux.</td><td>Instructions are documented; add a Windows CI runner to verify native trust/status behavior.</td></tr>
+            <tr><td>Local container build</td><td><span class="badge warn">Unavailable locally</span></td><td>No Docker-compatible runtime was installed.</td><td>GitHub Actions built the container successfully, closing the implementation risk.</td></tr>
+            <tr><td>Dependency Graph / Dependency Review</td><td><span class="badge warn">Explicitly skipped</span></td><td>Repository did not support the action; user authorized skipping it.</td><td>No automated dependency-vulnerability gate remains. Add an alternative such as an organization-approved SCA scanner.</td></tr>
+            <tr><td>SD-AI agentic requirements review</td><td><span class="badge bad">Failed</span></td><td>Provider startup failures followed by a no-first-output timeout.</td><td>Requirements were completed by Codex, but SD-AI's intended agent review gave no assurance.</td></tr>
+            <tr><td>SD-AI agentic architecture, implementation, tests, code review, docs</td><td><span class="badge bad">Never reached</span></td><td>The workflow stopped at requirements review.</td><td>Do not claim full agentic lifecycle coverage.</td></tr>
+            <tr><td>“Creating code review automation confirmation”</td><td><span class="badge info">Not created</span></td><td>The observed UI state was not a GitHub workflow or a recorded SD-AI action. No code-review automation was created.</td><td>Separate optional UI confirmations from task completion and expose their state clearly.</td></tr>
+            <tr><td>Internal authentication and authorization</td><td><span class="badge warn">Architecturally delegated</span></td><td>Identity-provider work was a non-goal; trusted ingress is required.</td><td>Unsafe if deployed directly. Deployment must enforce authn/authz, TLS, body limits, and rate limits.</td></tr>
+            <tr><td>HSM / non-exportable key</td><td><span class="badge warn">Deferred</span></td><td>PKCS#12 was selected for MVP scope and testability.</td><td>Java process can access key material. Replace adapter if policy mandates HSM/remote signing.</td></tr>
+            <tr><td>Crash-proof temporary-file removal</td><td><span class="badge warn">Residual risk</span></td><td><code>finally</code> cannot run after process/node crash.</td><td>Use restricted ephemeral volume with node-level cleanup and short pod lifetime.</td></tr>
+            <tr><td>Performance, load, and concurrency benchmarking</td><td><span class="badge warn">Not performed</span></td><td>No throughput/latency target was provided.</td><td>Benchmark with representative script sizes and real key/TSA provider before capacity planning.</td></tr>
+            <tr><td>Exact token/cost report</td><td><span class="badge bad">Impossible from telemetry</span></td><td>No token usage fields in SD-AI or accessible Work Mode logs.</td><td>Add provider-reported usage and workflow aggregation.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="sdai-review">
+        <h2>10. What SD-AI did wrong</h2>
+        <ol>
+          <li><strong>It generated insecure defaults.</strong> <code>allow_force_approval_bypass: true</code>, approval-free workspace writes, empty protected paths, enabled architecture waivers, and disabled workflow enforcement conflict with safe engineering governance. Publication was blocked twice.</li>
+          <li><strong>It routed to unavailable providers.</strong> Generated semantic profiles referenced Claude/Copilot/Gemini in an environment where Codex was the usable provider. Capability discovery should happen before configuration is materialized.</li>
+          <li><strong>Its deterministic output failed its own critical profile.</strong> The workflow marked steps completed even though it had not produced the RFC, contract, required diagrams, threat model, or acceptable ADR.</li>
+          <li><strong>It mislabeled a brief as implementation.</strong> The <code>implement</code> step completed in 34 ms and created an “AI Implementation Brief” explicitly saying it would not modify application source. Engineers could misread that as a completed implementation phase.</li>
+          <li><strong>It generated shallow placeholder content.</strong> The initial security review contained unchecked generic prompts, the plan contained generic workstream headings, and validation failure details were not represented as actionable structured findings in the audit.</li>
+          <li><strong>Its quality gate was language-inappropriate.</strong> The generated test command was <code>pytest -q</code> for a Java/Maven service. Codex had to replace it with <code>./mvnw ... clean verify</code>.</li>
+          <li><strong>Provider readiness was superficial.</strong> The Codex process was considered ready, then emitted 179 heartbeats with no first output for 15 minutes. A first-token/handshake deadline should fail much earlier.</li>
+          <li><strong>There was no useful fallback or resume.</strong> One failed requirements agent stopped every downstream agentic phase. No bounded retry with diagnosis, fallback provider, deterministic handoff, or resume-from-next-step mechanism completed the workflow.</li>
+          <li><strong>It did not record token or cost usage.</strong> The user-requested accounting cannot be reconstructed, even for the 900-second attempt.</li>
+          <li><strong>It created diagnostic file explosion.</strong> A heartbeat every few seconds became 179 separate committed files. This is auditable but noisy, slow to publish, and unfriendly to review.</li>
+          <li><strong>It had a feature-store path inconsistency.</strong> Some newer status/analyze commands expected <code>specs/changes/PS-SIGN-001</code>, while the active workflow stored the feature at <code>specs/PS-SIGN-001</code>.</li>
+          <li><strong>It did not validate external repository capabilities.</strong> A dependency-review job was added later by Codex, but SD-AI supplied no repository-capability preflight or fallback guidance. The first CI run failed because Dependency Graph was unavailable.</li>
+        </ol>
+        <div class="callout"><strong>Balanced assessment:</strong> SD-AI was useful as an artifact checklist, deterministic scaffold, and immutable audit recorder. It was not reliable as an autonomous agentic delivery engine in this run.</div>
+      </section>
+
+      <section id="improvements">
+        <h2>11. Improvements required for engineer adoption</h2>
+        <table>
+          <thead><tr><th>Priority</th><th>Improvement</th><th>Acceptance test</th></tr></thead>
+          <tbody>
+            <tr><td class="priority p0">P0</td><td><strong>Secure-by-default policy invariants.</strong> Forbid forced bypass, approval-free writes to protected paths, empty protection sets, and critical waivers unless a separately authorized policy explicitly enables them.</td><td><code>sdai init</code> output passes a built-in security lint and can be published without safety rejection.</td></tr>
+            <tr><td class="priority p0">P0</td><td><strong>Environment and provider preflight.</strong> Add <code>sdai doctor</code> to detect installed CLIs, login state, writable paths, Java/Maven/Docker availability, repository permissions, and provider handshake.</td><td>Workflow refuses to start with Claude when Claude is unavailable and explains the exact remediation.</td></tr>
+            <tr><td class="priority p0">P0</td><td><strong>First-output timeout and liveness semantics.</strong> Separate process heartbeat from meaningful model progress; default first-output deadline to 30–60 seconds.</td><td>A provider that emits heartbeats but no output fails within the first-output SLA, not after 900 seconds.</td></tr>
+            <tr><td class="priority p0">P0</td><td><strong>Complete token/cost telemetry.</strong> Record provider-reported input, cached input, output, reasoning, total tokens, request ID, pricing source, and cost on every attempt.</td><td>Per-step and workflow totals reconcile exactly across retries, timeouts, and partial responses.</td></tr>
+            <tr><td class="priority p0">P0</td><td><strong>Truthful step semantics.</strong> Rename deterministic <code>implement</code> to <code>implementation-brief</code>, or require actual source changes and tests before completion.</td><td>Workflow cannot report implementation complete when only a brief exists.</td></tr>
+            <tr><td class="priority p1">P1</td><td><strong>Generate artifacts that satisfy the selected profile.</strong> A critical workflow must either produce every required artifact or leave the producing step incomplete with structured findings.</td><td>A fresh critical run does not immediately fail validation for artifacts the workflow was responsible for generating.</td></tr>
+            <tr><td class="priority p1">P1</td><td><strong>Language-aware quality gates.</strong> Detect Maven/Gradle/npm/.NET/Python from repository files and generate relevant commands.</td><td>A repository with <code>pom.xml</code> gets Maven verification, never <code>pytest</code>.</td></tr>
+            <tr><td class="priority p1">P1</td><td><strong>Structured validation output.</strong> Record rule ID, path, severity, message, producer step, and suggested fix in the audit event.</td><td>Failed validation has no <code>unknown</code> child placeholders and can drive an automated repair loop.</td></tr>
+            <tr><td class="priority p1">P1</td><td><strong>Checkpoint, fallback, and resume.</strong> Support retry policy, fallback provider, engineer takeover, and resume from the failed step without replaying completed deterministic work.</td><td>After a requirements-agent failure, an engineer can approve a repaired artifact and resume at architecture review.</td></tr>
+            <tr><td class="priority p1">P1</td><td><strong>Unified feature storage model.</strong> Migrate or alias legacy <code>specs/&lt;id&gt;</code> and new <code>specs/changes/&lt;id&gt;</code> layouts.</td><td><code>run</code>, <code>validate</code>, <code>status</code>, and <code>analyze</code> resolve the same feature consistently.</td></tr>
+            <tr><td class="priority p1">P1</td><td><strong>Decision provenance.</strong> Require an explicit actor class and authority for every decision: user, policy, deterministic rule, agent proposal, engineer approval, or external constraint.</td><td>ADR and audit can distinguish “SD-AI generated” from “engineer approved” and “user directed.”</td></tr>
+            <tr><td class="priority p1">P1</td><td><strong>Repository capability discovery.</strong> Test GitHub Dependency Graph, Actions permissions, branch protection, and required checks before generating CI.</td><td>Unsupported dependency review becomes a warning with an approved fallback, not a failed first CI run.</td></tr>
+            <tr><td class="priority p2">P2</td><td><strong>Compact diagnostics.</strong> Keep a rolling heartbeat summary in one attempt file and emit separate files only for state transitions or anomalies.</td><td>A 15-minute timeout produces fewer than 10 diagnostic files while retaining timing evidence.</td></tr>
+            <tr><td class="priority p2">P2</td><td><strong>Engineer-facing run summary.</strong> Generate a single HTML/JSON report with decisions, artifacts, failures, skipped work, test evidence, tokens, costs, and recommended next actions.</td><td><code>sdai report PS-SIGN-001 --format html</code> produces the equivalent of this dossier automatically.</td></tr>
+            <tr><td class="priority p2">P2</td><td><strong>Production-readiness profiles.</strong> Add optional Windows Authenticode verification, live TSA staging test, SCA/SBOM, load test, and deployment-policy checks.</td><td>Teams can select an enterprise signing profile and get evidence for each required control.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Recommended engineer workflow</h3>
+        <ol>
+          <li><code>sdai doctor</code> — verify environment, providers, authentication, repo capabilities, and language toolchain.</li>
+          <li><code>sdai init --secure</code> — generate immutable secure defaults and an explainable policy diff.</li>
+          <li><code>sdai plan</code> — create artifacts with explicit decision owners and unresolved questions.</li>
+          <li>Engineer approval checkpoint — approve requirements, ADR, threat model, and external prerequisites.</li>
+          <li><code>sdai run --resume</code> — execute agents with first-output SLA, token budgets, checkpointing, and fallback.</li>
+          <li>Language-aware verification — run project-native tests plus selected security/production gates.</li>
+          <li><code>sdai report --format html</code> — produce reconciled evidence, token/cost totals, gaps, and publication readiness.</li>
+        </ol>
+      </section>
+
+      <section id="inventory">
+        <h2>12. Artifact inventory</h2>
+        <table>
+          <thead><tr><th>Category</th><th>Included artifacts</th></tr></thead>
+          <tbody>
+            <tr><td>Application</td><td>20 production Java files, Spring configuration, <code>pom.xml</code>, Maven wrapper.</td></tr>
+            <tr><td>Tests</td><td>4 Java test/support files, Mockito test configuration, 11 executed tests.</td></tr>
+            <tr><td>Deployment and CI</td><td>Dockerfile, Docker ignore rules, GitHub Actions verify/container workflow.</td></tr>
+            <tr><td>User/operations documentation</td><td>README and SECURITY policy.</td></tr>
+            <tr><td>Specification</td><td>Intake, specification, RFC, plan, tasks, implementation brief.</td></tr>
+            <tr><td>Architecture</td><td>Architecture narrative, alternatives, weighted decision matrix, ADR, context/container/component/sequence diagrams.</td></tr>
+            <tr><td>Security and contracts</td><td>Threat model, completed security review, OpenAPI 3.1 contract.</td></tr>
+            <tr><td>Evidence</td><td>SD-AI execution record, requirement traceability, verification evidence.</td></tr>
+            <tr><td>SD-AI configuration</td><td>Agents, prompts, skills, workflows, routing, policies, governance, quality gates, architecture validation.</td></tr>
+            <tr><td>Raw audit</td><td>38-event JSONL ledger, lock, 188 provider diagnostics including 179 heartbeats and 3 terminal failure records.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="sources">
+        <h2>13. Evidence sources and confidence</h2>
+        <p>This report was assembled from current repository and remote evidence, not from prior script-signing memory.</p>
+        <ul>
+          <li><code>specs/PS-SIGN-001/.sdai/audit/events.jsonl</code> — authoritative SD-AI event chronology.</li>
+          <li><code>specs/PS-SIGN-001/.sdai/diagnostics/provider/</code> — provider timing, heartbeats, and terminal failures.</li>
+          <li><code>specs/PS-SIGN-001/evidence/</code> — verification, traceability, and execution narrative.</li>
+          <li><code>specs/PS-SIGN-001/adr/</code>, <code>architecture/</code>, <code>security/</code>, and <code>contracts/</code> — decisions and design.</li>
+          <li><code>target/surefire-reports/</code> — executed local test counts and durations (build output, intentionally not committed).</li>
+          <li>Git history and PR #2 — file counts, commits, and publication state.</li>
+          <li>GitHub Actions runs 32452336555 and 32454003188 — initial dependency-review failure and final successful CI.</li>
+        </ul>
+        <div class="callout warn"><strong>Confidence boundary:</strong> implementation, file, test, timing, audit, and CI claims are evidence-backed. Exact LLM token and cost claims are intentionally absent because the required telemetry does not exist.</div>
+      </section>
+    </main>
+  </div>
+
+  <footer>
+    Generated as a standalone implementation and process audit for PS-SIGN-001. No external scripts, fonts, or assets are required.
+  </footer>
+</body>
+</html>

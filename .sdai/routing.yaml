@@ -1,0 +1,10 @@
+version: 1
+routes:
+  requirements: codex
+  architecture: codex
+  planning: codex
+  coding: codex
+  review: codex
+  testing: codex
+  security: codex
+  documentation: codex
