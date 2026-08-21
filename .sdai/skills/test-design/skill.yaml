@@ -1,0 +1,3 @@
+name: test-design
+description: Build risk-based tests tied to acceptance criteria and failure modes.
+capabilities: [testing, coding, review]

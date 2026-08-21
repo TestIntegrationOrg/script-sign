@@ -1,0 +1,7 @@
+version: 2
+default_workflow: standard
+artifact_root: specs
+agent_platform:
+  enabled: true
+  default_execution_mode: advisory
+  max_context_chars_per_file: 30000

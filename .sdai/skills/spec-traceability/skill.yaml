@@ -1,0 +1,3 @@
+name: spec-traceability
+description: Keep requirements, architecture, tasks, code, tests, and review findings traceable.
+capabilities: [requirements, architecture, planning, coding, review, testing, security, documentation]

@@ -1,0 +1,5 @@
+flowchart LR
+    Ingress[API / Ingress] --> App[Application / Domain]
+    App --> Data[(Data Store)]
+    App --> Integration[Integration Boundary]
+    App --> Obs[Observability]

@@ -1,0 +1,7 @@
+name: standard
+steps:
+  - specify
+  - architect
+  - plan
+  - implement
+  - validate

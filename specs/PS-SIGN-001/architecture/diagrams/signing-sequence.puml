@@ -1,0 +1,18 @@
+@startuml
+actor Caller
+participant "Signing API" as API
+participant "Application Service" as App
+participant "Jsign Adapter" as Jsign
+participant "RFC 3161 TSA" as TSA
+
+Caller -> API: POST fileName + scriptContent
+API -> App: sign(request)
+App -> App: validate name, size, unsigned input
+App -> Jsign: sign(unique temporary .ps1)
+Jsign -> TSA: timestamp digest (when enabled)
+TSA --> Jsign: validated timestamp token
+Jsign --> App: signed script metadata
+App -> App: read result and delete temporary file
+App --> API: signed content
+API --> Caller: 200 + correlation ID
+@enduml

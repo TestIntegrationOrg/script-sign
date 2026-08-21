@@ -1,0 +1,11 @@
+version: 1
+feature_id: PS-SIGN-001
+workflow: critical
+completed_steps:
+- specify
+- architect
+- security
+- plan
+- implement
+last_status: failed
+paused_at: validate

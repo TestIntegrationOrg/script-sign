@@ -1,0 +1,13 @@
+.git
+.github
+.idea
+.vscode
+.venv
+target
+specs
+.sdai
+.agents
+*.iml
+*.p12
+*.pfx
+.env

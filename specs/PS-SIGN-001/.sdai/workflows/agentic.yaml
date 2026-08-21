@@ -1,0 +1,7 @@
+version: 1
+feature_id: PS-SIGN-001
+workflow: agentic
+completed_steps:
+- spec-baseline
+last_status: failed
+paused_at: requirements-review

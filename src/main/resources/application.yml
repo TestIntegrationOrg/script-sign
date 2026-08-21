@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: script-sign
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+
+server:
+  shutdown: graceful
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  pattern:
+    level: "%5p [correlationId:%X{correlationId:-}]"
+
+signing:
+  max-script-bytes: ${SIGNING_MAX_SCRIPT_BYTES:1048576}
+  temp-directory: ${SIGNING_TEMP_DIRECTORY:${java.io.tmpdir}}
+  keystore:
+    path: ${SIGNING_KEYSTORE_PATH:}
+    store-password: ${SIGNING_KEYSTORE_PASSWORD:}
+    key-password: ${SIGNING_KEY_PASSWORD:}
+    alias: ${SIGNING_KEY_ALIAS:}
+  timestamp:
+    enabled: ${SIGNING_TIMESTAMP_ENABLED:true}
+    authorities: ${SIGNING_TIMESTAMP_AUTHORITIES:https://timestamp.sectigo.com}
+    retries: ${SIGNING_TIMESTAMP_RETRIES:2}
+    retry-wait-seconds: ${SIGNING_TIMESTAMP_RETRY_WAIT_SECONDS:2}
