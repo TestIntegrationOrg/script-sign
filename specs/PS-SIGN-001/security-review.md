@@ -20,7 +20,8 @@ features supplied by this service.
 - [x] Sensitive logging prohibited: stable redacted problem responses and
   correlation-only logging.
 - [x] Dependency and supply-chain risk considered: pinned Jsign, Maven Central,
-  wrapper, and high-severity CI dependency review.
+  Maven wrapper, and CI test/container rebuilds. Repository dependency review is
+  unavailable and explicitly skipped by owner direction.
 - [x] Abuse and denial-of-service considered: application byte limit plus required
   ingress body/rate/concurrency limits.
 - [x] Auditability documented: correlation IDs and external gateway/audit system.

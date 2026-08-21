@@ -27,7 +27,7 @@
 | Private key is extracted | Read-only secret mount, least-privilege workload identity, restricted filesystem/process access | PKCS#12 model exposes key to the Java process |
 | Timestamp response is spoofed | HTTPS TSA endpoints, Jsign RFC 3161 validation, fail closed | Compromised trusted TSA or CA |
 | Temp file remains after failure | `finally` deletion and cleanup tests; dedicated restricted temp directory | Process/node crash before cleanup |
-| Dependency compromise | Version pinning, Maven Central, CI dependency review on pull requests | Undetected upstream compromise |
+| Dependency compromise | Version pinning, Maven Central, reproducible Maven wrapper, CI test and container rebuilds | Undetected upstream compromise; repository dependency graph is unavailable |
 | Signing request is repudiated | Correlation ID and outcome metadata without content logging | Full non-repudiation requires an external audit system |
 
 ## Security Requirements
